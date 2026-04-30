@@ -3,26 +3,56 @@
 import { useState } from 'react'
 import Icon from '@/app/components/atoms/Icon'
 import PostCard from '@/app/components/organisms/PostCard'
-import type { Post } from '@/app/types/dilemma'
+import type { Post, VoteStyle } from '@/app/types/dilemma'
 
 interface ProfileScreenProps {
   posts: Post[]
+  theme: 'light' | 'dark'
+  setTheme: (t: 'light' | 'dark') => void
+  voteStyle: VoteStyle
+  setVoteStyle: (v: VoteStyle) => void
 }
 
 type Tab = 'dilemas' | 'votos' | 'comentarios' | 'guardados'
 
-export default function ProfileScreen({ posts }: ProfileScreenProps) {
+export default function ProfileScreen({ posts, theme, setTheme, voteStyle, setVoteStyle }: ProfileScreenProps) {
   const [tab, setTab] = useState<Tab>('dilemas')
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   return (
     <div className="screen">
-      <div className="topbar">
+      <div className="topbar topbar--static">
         <h1>Perfil</h1>
         <div className="topbar-actions">
-          <button className="btn btn-sm btn-ghost">
-            <Icon name="settings" size={14} />
-            <span style={{ marginLeft: 6 }}>Ajustes</span>
-          </button>
+          <div style={{ position: 'relative' }}>
+            <button className="btn btn-sm btn-ghost" onClick={() => setSettingsOpen(o => !o)}>
+              <Icon name="settings" size={14} />
+              <span style={{ marginLeft: 6 }}>Ajustes</span>
+            </button>
+            {settingsOpen && (
+              <div className="settings-dropdown">
+                <div className="tweak-row">
+                  <label>Tema</label>
+                  <div className="tweak-seg">
+                    <button aria-pressed={theme === 'light'} onClick={() => setTheme('light')}>
+                      <Icon name="sun" size={13} /> Claro
+                    </button>
+                    <button aria-pressed={theme === 'dark'} onClick={() => setTheme('dark')}>
+                      <Icon name="moon" size={13} /> Oscuro
+                    </button>
+                  </div>
+                </div>
+                <div className="tweak-row">
+                  <label>Estilo de voto</label>
+                  <div className="tweak-seg">
+                    <button aria-pressed={voteStyle === 'reveal'} onClick={() => setVoteStyle('reveal')}>Revelar</button>
+                    <button aria-pressed={voteStyle === 'tap'}    onClick={() => setVoteStyle('tap')}>Tocar</button>
+                    <button aria-pressed={voteStyle === 'slider'} onClick={() => setVoteStyle('slider')}>Deslizar</button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

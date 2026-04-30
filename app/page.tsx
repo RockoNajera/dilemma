@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import FeedScreen from '@/app/components/organisms/FeedScreen'
 import TrendingScreen from '@/app/components/organisms/TrendingScreen'
 import ProfileScreen from '@/app/components/organisms/ProfileScreen'
@@ -8,6 +8,7 @@ import LeftRail from '@/app/components/organisms/LeftRail'
 import RightRail from '@/app/components/organisms/RightRail'
 import AuthModal from '@/app/components/organisms/AuthModal'
 import ComposeModal from '@/app/components/organisms/ComposeModal'
+import MobileTabbar from '@/app/components/organisms/MobileTabbar'
 import type { ComposePayload } from '@/app/components/organisms/ComposeModal'
 import { FEED } from '@/app/data/feed'
 import type { Post, VoteStyle } from '@/app/types/dilemma'
@@ -17,7 +18,12 @@ type Screen = 'feed' | 'trending' | 'notifs' | 'saved' | 'profile'
 export default function Home() {
   const [posts, setPosts] = useState<Post[]>(FEED)
   const [voteStyle, setVoteStyle] = useState<VoteStyle>('reveal')
+  const [theme, setTheme] = useState<'light' | 'dark'>('light')
   const [screen, setScreen] = useState<Screen>('feed')
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme)
+  }, [theme])
   const [authOpen, setAuthOpen] = useState(false)
   const [composeOpen, setComposeOpen] = useState(false)
   const [openPostId, setOpenPostId] = useState<number | null>(null)
@@ -63,7 +69,7 @@ export default function Home() {
           {screen === 'trending' ? (
             <TrendingScreen posts={posts} setScreen={setScreen} onOpenPost={setOpenPostId} />
           ) : screen === 'profile' ? (
-            <ProfileScreen posts={posts} />
+            <ProfileScreen posts={posts} theme={theme} setTheme={setTheme} voteStyle={voteStyle} setVoteStyle={setVoteStyle} />
           ) : (
             <FeedScreen
               posts={posts}
@@ -78,6 +84,8 @@ export default function Home() {
         </main>
         <RightRail setScreen={setScreen} />
       </div>
+
+      <MobileTabbar screen={screen} setScreen={setScreen} onCompose={() => setComposeOpen(true)} />
 
       {authOpen && <AuthModal onClose={() => setAuthOpen(false)} />}
       {composeOpen && <ComposeModal onClose={() => setComposeOpen(false)} onPublish={onPublish} />}

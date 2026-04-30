@@ -18,16 +18,6 @@ export default function FeedScreen({
 }: FeedScreenProps) {
   return (
     <div className="screen">
-      <div className="topbar">
-        <h1>Inicio</h1>
-        <div className="topbar-actions">
-          <div className="segmented" role="tablist">
-            <button aria-pressed={voteStyle === 'reveal'} onClick={() => setVoteStyle('reveal')}>Revelar</button>
-            <button aria-pressed={voteStyle === 'tap'} onClick={() => setVoteStyle('tap')}>Tocar</button>
-            <button aria-pressed={voteStyle === 'slider'} onClick={() => setVoteStyle('slider')}>Deslizar</button>
-          </div>
-        </div>
-      </div>
       <div className="feed">
         {posts.map(p => (
           <PostCard

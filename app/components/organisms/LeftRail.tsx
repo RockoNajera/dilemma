@@ -33,7 +33,7 @@ export default function LeftRail({ screen, setScreen, onCompose, openAuth }: Lef
   return (
     <aside className="rail-left">
       <div className="brand">
-        <div className="brand-mark">D</div>
+        <img src="/uploads/Dilemma%20logo.avif" width={30} height={30} alt="Dilemma" style={{ borderRadius: '8px' }} />
         <div className="brand-name">Dilem<em>ma</em></div>
       </div>
 
