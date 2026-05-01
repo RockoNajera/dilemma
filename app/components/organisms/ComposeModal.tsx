@@ -83,15 +83,6 @@ export default function ComposeModal({ onClose, onPublish }: ComposeModalProps) 
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div className="field" style={{ margin: 0 }}>
-              <label>Duración</label>
-              <select value={days} onChange={e => setDays(Number(e.target.value))}>
-                <option value={1}>1 día</option>
-                <option value={3}>3 días</option>
-                <option value={7}>7 días</option>
-                <option value={14}>14 días</option>
-              </select>
-            </div>
-            <div className="field" style={{ margin: 0 }}>
               <label>Etiquetas</label>
               <input value={tags} onChange={e => setTags(e.target.value)} placeholder="#comida #cdmx" />
             </div>
