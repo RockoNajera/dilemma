@@ -1,5 +1,16 @@
 export type VoteStyle = 'reveal' | 'tap' | 'slider'
 
+export interface UserProfile {
+  id: number
+  username: string
+  name: string
+  lastname: string
+  bio: string
+  profile_pic_url: string | null
+  celebrity: boolean
+  privacy_status: string
+}
+
 export interface Author {
   name: string
   handle: string

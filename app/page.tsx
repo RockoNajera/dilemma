@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import FeedScreen from '@/app/components/organisms/FeedScreen'
 import TrendingScreen from '@/app/components/organisms/TrendingScreen'
 import ProfileScreen from '@/app/components/organisms/ProfileScreen'
@@ -10,56 +10,98 @@ import AuthModal from '@/app/components/organisms/AuthModal'
 import ComposeModal from '@/app/components/organisms/ComposeModal'
 import MobileTabbar from '@/app/components/organisms/MobileTabbar'
 import type { ComposePayload } from '@/app/components/organisms/ComposeModal'
-import { FEED } from '@/app/data/feed'
+import * as api from '@/app/lib/api'
 import type { Post, VoteStyle } from '@/app/types/dilemma'
 
 type Screen = 'feed' | 'trending' | 'notifs' | 'saved' | 'profile'
 
 export default function Home() {
-  const [posts, setPosts] = useState<Post[]>(FEED)
+  const [posts, setPosts] = useState<Post[]>([])
   const [voteStyle, setVoteStyle] = useState<VoteStyle>('reveal')
   const [theme, setTheme] = useState<'light' | 'dark'>('light')
   const [screen, setScreen] = useState<Screen>('feed')
-
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme)
-  }, [theme])
   const [authOpen, setAuthOpen] = useState(false)
   const [composeOpen, setComposeOpen] = useState(false)
   const [openPostId, setOpenPostId] = useState<number | null>(null)
 
-  const onVote = (id: number, side: 'a' | 'b') => {
-    setPosts(ps => ps.map(p => {
-      if (p.id !== id) return p
-      return { ...p, voted: side, votes: { ...p.votes, [side]: p.votes[side] + 1 } }
-    }))
-  }
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme)
+  }, [theme])
 
-  const onLike = (id: number) => {
-    setPosts(ps => ps.map(p => p.id === id ? { ...p, liked: !p.liked } : p))
-  }
+  useEffect(() => {
+    api.getPosts().then(setPosts).catch(console.error)
+  }, [])
 
-  const onSave = (id: number) => {
-    setPosts(ps => ps.map(p => p.id === id ? { ...p, saved: !p.saved } : p))
-  }
+  const onVote = useCallback(async (id: number, side: 'a' | 'b') => {
+    const prev = posts.find(p => p.id === id)
+    if (!prev || prev.voted) return
 
-  const onPublish = ({ title, aLabel, bLabel, days, tags }: ComposePayload) => {
-    const newPost: Post = {
-      id: Date.now(),
-      author: { name: 'Valeria Moreno', handle: '@valmoreno', initial: 'V' },
-      posted: 'ahora',
-      daysLeft: days,
-      title,
-      tags: tags.split(/\s+/).filter(Boolean),
-      a: { label: aLabel, caption: `OPTION A · ${aLabel}` },
-      b: { label: bLabel, caption: `OPTION B · ${bLabel}` },
-      votes: { a: 0, b: 0 },
-      likes: 0, comments: 0, reposts: 0,
-      voted: null, liked: false, saved: false,
+    setPosts(ps => ps.map(p =>
+      p.id !== id ? p : {
+        ...p,
+        voted: side,
+        votes: { ...p.votes, [side]: p.votes[side] + 1 },
+      }
+    ))
+
+    try {
+      await api.vote(id, side)
+    } catch {
+      setPosts(ps => ps.map(p => p.id === id ? prev : p))
     }
-    setPosts(ps => [newPost, ...ps])
+  }, [posts])
+
+  const onLike = useCallback(async (id: number) => {
+    const prev = posts.find(p => p.id === id)
+    if (!prev) return
+
+    setPosts(ps => ps.map(p =>
+      p.id !== id ? p : { ...p, liked: !p.liked }
+    ))
+
+    try {
+      await api.like(id)
+    } catch {
+      setPosts(ps => ps.map(p => p.id === id ? prev : p))
+    }
+  }, [posts])
+
+  const onSave = useCallback(async (id: number) => {
+    const prev = posts.find(p => p.id === id)
+    if (!prev) return
+
+    setPosts(ps => ps.map(p =>
+      p.id !== id ? p : { ...p, saved: !p.saved }
+    ))
+
+    try {
+      await api.bookmark(id)
+    } catch {
+      setPosts(ps => ps.map(p => p.id === id ? prev : p))
+    }
+  }, [posts])
+
+  const onPublish = useCallback(async ({ title, aLabel, bLabel, days, tags }: ComposePayload) => {
     setComposeOpen(false)
-  }
+
+    const endsAt = days > 0
+      ? new Date(Date.now() + days * 86_400_000).toISOString()
+      : null
+
+    try {
+      const newPost = await api.createPost({
+        title,
+        first_textual_content: aLabel,
+        second_textual_content: bLabel,
+        post_type: 'text',
+        tags: tags.trim(),
+        ends_at: endsAt,
+      })
+      setPosts(ps => [newPost, ...ps])
+    } catch (err) {
+      console.error('createPost failed:', err)
+    }
+  }, [])
 
   return (
     <>
