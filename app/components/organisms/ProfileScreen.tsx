@@ -140,6 +140,7 @@ export default function ProfileScreen({ posts, theme, setTheme, voteStyle, setVo
               onLike={() => {}}
               onSave={() => {}}
               onOpen={() => {}}
+              onReport={() => {}}
             />
           ))
         ) : (

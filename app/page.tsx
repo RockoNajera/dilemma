@@ -8,6 +8,8 @@ import LeftRail from '@/app/components/organisms/LeftRail'
 import RightRail from '@/app/components/organisms/RightRail'
 import AuthModal from '@/app/components/organisms/AuthModal'
 import ComposeModal from '@/app/components/organisms/ComposeModal'
+import CommentDrawer from '@/app/components/organisms/CommentDrawer'
+import ReportModal from '@/app/components/organisms/ReportModal'
 import MobileTabbar from '@/app/components/organisms/MobileTabbar'
 import type { ComposePayload } from '@/app/components/organisms/ComposeModal'
 import * as api from '@/app/lib/api'
@@ -23,6 +25,7 @@ export default function Home() {
   const [authOpen, setAuthOpen] = useState(false)
   const [composeOpen, setComposeOpen] = useState(false)
   const [openPostId, setOpenPostId] = useState<number | null>(null)
+  const [reportPostId, setReportPostId] = useState<number | null>(null)
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
@@ -121,6 +124,7 @@ export default function Home() {
               onLike={onLike}
               onSave={onSave}
               onOpenPost={setOpenPostId}
+              onReport={setReportPostId}
             />
           )}
         </main>
@@ -131,6 +135,19 @@ export default function Home() {
 
       {authOpen && <AuthModal onClose={() => setAuthOpen(false)} />}
       {composeOpen && <ComposeModal onClose={() => setComposeOpen(false)} onPublish={onPublish} />}
+      {openPostId !== null && (() => {
+        const p = posts.find(p => p.id === openPostId)
+        return p ? (
+          <CommentDrawer
+            postId={p.id}
+            postTitle={p.title}
+            onClose={() => setOpenPostId(null)}
+          />
+        ) : null
+      })()}
+      {reportPostId !== null && (
+        <ReportModal postId={reportPostId} onClose={() => setReportPostId(null)} />
+      )}
     </>
   )
 }

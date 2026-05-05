@@ -14,9 +14,10 @@ interface PostCardProps {
   onLike: (id: number) => void
   onSave: (id: number) => void
   onOpen: (id: number) => void
+  onReport: (id: number) => void
 }
 
-export default function PostCard({ post, voteStyle, onVote, onLike, onSave, onOpen }: PostCardProps) {
+export default function PostCard({ post, voteStyle, onVote, onLike, onSave, onOpen, onReport }: PostCardProps) {
   const total = post.votes.a + post.votes.b || 1
   const pctA = Math.round((post.votes.a / total) * 100)
   const pctB = 100 - pctA
@@ -31,7 +32,7 @@ export default function PostCard({ post, voteStyle, onVote, onLike, onSave, onOp
           <div className="meta">{post.author.handle} · {post.posted}</div>
         </div>
         <button className="follow">Seguir</button>
-        <button className="more" aria-label="Más opciones"><Icon name="more" /></button>
+        <button className="more" aria-label="Más opciones" onClick={() => onReport(post.id)}><Icon name="more" /></button>
       </div>
 
       <h2 className="post-title">{post.title}</h2>

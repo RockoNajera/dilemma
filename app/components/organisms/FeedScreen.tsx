@@ -11,10 +11,11 @@ interface FeedScreenProps {
   onLike: (id: number) => void
   onSave: (id: number) => void
   onOpenPost: (id: number) => void
+  onReport: (id: number) => void
 }
 
 export default function FeedScreen({
-  posts, voteStyle, setVoteStyle, onVote, onLike, onSave, onOpenPost,
+  posts, voteStyle, setVoteStyle, onVote, onLike, onSave, onOpenPost, onReport,
 }: FeedScreenProps) {
   return (
     <div className="screen">
@@ -28,6 +29,7 @@ export default function FeedScreen({
             onLike={onLike}
             onSave={onSave}
             onOpen={onOpenPost}
+            onReport={onReport}
           />
         ))}
         <div className="empty-state" style={{ paddingTop: 30 }}>

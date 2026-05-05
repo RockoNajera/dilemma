@@ -1,4 +1,4 @@
-import type { Post, Comment, TrendingItem, Creator } from '@/app/types/dilemma'
+import type { Post, TrendingItem, Creator } from '@/app/types/dilemma'
 
 export const FEED: Post[] = [
   {
@@ -78,14 +78,3 @@ export const CREATORS: Creator[] = [
   { name: 'Iván Ortega',   handle: '@ivano',   initial: 'I', followers: '19.4K' },
 ]
 
-export const COMMENTS: Record<number, Comment[]> = {
-  1: [
-    { name: 'Sofía', initial: 'S', side: 'b', ts: '1 h', text: 'Across cambió el lenguaje de la animación. No hay discusión.', likes: 184 },
-    { name: 'Héctor', initial: 'H', side: 'a', ts: '2 h', text: 'La primera es más limpia, más compacta. Una carta de amor al medio.', likes: 92 },
-    { name: 'Nadia', initial: 'N', side: 'b', ts: '3 h', text: 'El frame-rate mixto en Across es arte puro.', likes: 57 },
-  ],
-  2: [
-    { name: 'Pablo', initial: 'P', side: 'a', ts: '30 min', text: 'Pastor con piña y ya, no hay más que decir.', likes: 312 },
-    { name: 'Ana', initial: 'A', side: 'b', ts: '1 h', text: 'Suadero bien dorado es otro nivel. Con salsa verde 🌶', likes: 204 },
-  ],
-}

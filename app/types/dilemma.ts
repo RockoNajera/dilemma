@@ -59,11 +59,44 @@ export interface Creator {
   followers: string
 }
 
-export interface Comment {
+export interface CommentAuthor {
+  id: number
+  username: string
   name: string
   initial: string
-  side: 'a' | 'b'
-  ts: string
+}
+
+export interface CommentReply {
+  id: number
+  author: CommentAuthor
   text: string
-  likes: number
+  voteSide: 'A' | 'B' | null
+  likeCount: number
+  userLiked: boolean
+  ts: string
+}
+
+export interface Comment {
+  id: number
+  author: CommentAuthor
+  parentId: number | null
+  text: string
+  voteSide: 'A' | 'B' | null
+  likeCount: number
+  userLiked: boolean
+  replies: CommentReply[]
+  ts: string
+}
+
+export interface ReportSubcategory {
+  id: number
+  title: string
+}
+
+export interface ReportCategory {
+  id: number
+  title: string
+  onPosts: boolean
+  hasSubcategories: boolean
+  subcategories: ReportSubcategory[]
 }

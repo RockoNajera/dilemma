@@ -1,4 +1,4 @@
-import type { Post, UserProfile } from '@/app/types/dilemma'
+import type { Comment, CommentReply, Post, ReportCategory, UserProfile } from '@/app/types/dilemma'
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
 
@@ -209,4 +209,137 @@ export async function getFollowCounts(
     request<PaginatedResponse<unknown>>(`/api/v1/follow/${userId}/following/`),
   ])
   return { followers: f1.count, following: f2.count }
+}
+
+// --- Comments ---
+
+interface ApiCommentAuthor {
+  id: number
+  username: string
+  name: string
+  lastname: string
+  profile_pic_url: string | null
+  celebrity: boolean
+  privacy_status: string
+}
+
+interface ApiCommentReply {
+  id: number
+  author: ApiCommentAuthor
+  text: string
+  vote_side: string
+  status: string
+  like_count: number
+  user_liked: boolean
+  created_at: string
+  updated_at: string
+}
+
+interface ApiComment {
+  id: number
+  author: ApiCommentAuthor
+  parent: number | null
+  text: string
+  vote_side: string
+  status: string
+  like_count: number
+  user_liked: boolean
+  replies: ApiCommentReply[]
+  created_at: string
+  updated_at: string
+}
+
+function adaptCommentAuthor(api: ApiCommentAuthor) {
+  const fullName = [api.name, api.lastname].filter(Boolean).join(' ') || api.username
+  return { id: api.id, username: api.username, name: fullName, initial: fullName.charAt(0).toUpperCase() }
+}
+
+function adaptCommentReply(api: ApiCommentReply): CommentReply {
+  return {
+    id: api.id,
+    author: adaptCommentAuthor(api.author),
+    text: api.text,
+    voteSide: (api.vote_side as 'A' | 'B') || null,
+    likeCount: api.like_count,
+    userLiked: api.user_liked,
+    ts: timeAgo(api.created_at),
+  }
+}
+
+function adaptComment(api: ApiComment): Comment {
+  return {
+    id: api.id,
+    author: adaptCommentAuthor(api.author),
+    parentId: api.parent,
+    text: api.text,
+    voteSide: (api.vote_side as 'A' | 'B') || null,
+    likeCount: api.like_count,
+    userLiked: api.user_liked,
+    replies: api.replies.map(adaptCommentReply),
+    ts: timeAgo(api.created_at),
+  }
+}
+
+export async function getComments(postId: number): Promise<Comment[]> {
+  const data = await request<PaginatedResponse<ApiComment>>(`/api/v1/posts/${postId}/comments/`)
+  return data.results.map(adaptComment)
+}
+
+export async function createComment(
+  postId: number,
+  text: string,
+  parent?: number,
+  voteSide?: 'A' | 'B',
+): Promise<Comment> {
+  const body: Record<string, unknown> = { text }
+  if (parent != null) body.parent = parent
+  if (voteSide) body.vote_side = voteSide
+  const api = await request<ApiComment>(`/api/v1/posts/${postId}/comments/`, {
+    method: 'POST',
+    body: JSON.stringify(body),
+  })
+  return adaptComment(api)
+}
+
+export async function likeComment(
+  postId: number,
+  commentId: number,
+): Promise<{ liked: boolean }> {
+  return request(`/api/v1/posts/${postId}/comments/${commentId}/like/`, { method: 'POST' })
+}
+
+// --- Reports ---
+
+interface ApiReportCategory {
+  id: number
+  title: string
+  on_posts: boolean
+  on_users: boolean
+  on_comments: boolean
+  has_subcategories: boolean
+  subcategories: Array<{ id: number; title: string }>
+}
+
+export async function getReportCategories(): Promise<ReportCategory[]> {
+  const data = await request<PaginatedResponse<ApiReportCategory>>('/api/v1/reports/categories/')
+  return data.results.map(c => ({
+    id: c.id,
+    title: c.title,
+    onPosts: c.on_posts,
+    hasSubcategories: c.has_subcategories,
+    subcategories: c.subcategories,
+  }))
+}
+
+export interface ReportPayload {
+  category: number
+  subcategory?: number
+  notes?: string
+}
+
+export async function reportPost(postId: number, payload: ReportPayload): Promise<void> {
+  return request(`/api/v1/posts/${postId}/report/`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
 }
