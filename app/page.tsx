@@ -84,7 +84,7 @@ export default function Home() {
     }
   }, [posts])
 
-  const onPublish = useCallback(async ({ title, aLabel, bLabel, days, tags }: ComposePayload) => {
+  const onPublish = useCallback(async ({ title, aLabel, bLabel, days, tags, aMedia, bMedia }: ComposePayload) => {
     setComposeOpen(false)
 
     const endsAt = days > 0
@@ -100,7 +100,11 @@ export default function Home() {
         tags: tags.trim(),
         ends_at: endsAt,
       })
-      setPosts(ps => [newPost, ...ps])
+      setPosts(ps => [{
+        ...newPost,
+        a: { ...newPost.a, mediaType: aMedia?.type ?? null, mediaUrl: aMedia?.url ?? null },
+        b: { ...newPost.b, mediaType: bMedia?.type ?? null, mediaUrl: bMedia?.url ?? null },
+      }, ...ps])
     } catch (err) {
       console.error('createPost failed:', err)
     }

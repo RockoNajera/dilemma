@@ -20,6 +20,8 @@ export interface Author {
 export interface PostOption {
   label: string
   caption: string
+  mediaType?: 'image' | 'video' | 'youtube' | null
+  mediaUrl?: string | null
 }
 
 export interface Votes {

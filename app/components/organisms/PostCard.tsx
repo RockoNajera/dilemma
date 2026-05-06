@@ -47,10 +47,12 @@ export default function PostCard({ post, voteStyle, onVote, onLike, onSave, onOp
           <div className="options">
             <OptionCard
               side="a" label={post.a.label} caption={post.a.caption}
+              mediaType={post.a.mediaType} mediaUrl={post.a.mediaUrl}
               chosen={voted === 'a'} revealed={false} pct={pctA} onClick={() => {}}
             />
             <OptionCard
               side="b" label={post.b.label} caption={post.b.caption}
+              mediaType={post.b.mediaType} mediaUrl={post.b.mediaUrl}
               chosen={voted === 'b'} revealed={false} pct={pctB} onClick={() => {}}
             />
             <div className="vs">vs</div>
@@ -66,6 +68,7 @@ export default function PostCard({ post, voteStyle, onVote, onLike, onSave, onOp
           <div className="options">
             <OptionCard
               side="a" label={post.a.label} caption={post.a.caption}
+              mediaType={post.a.mediaType} mediaUrl={post.a.mediaUrl}
               chosen={voted === 'a'}
               revealed={voteStyle === 'reveal' && !!voted}
               pct={pctA}
@@ -73,6 +76,7 @@ export default function PostCard({ post, voteStyle, onVote, onLike, onSave, onOp
             />
             <OptionCard
               side="b" label={post.b.label} caption={post.b.caption}
+              mediaType={post.b.mediaType} mediaUrl={post.b.mediaUrl}
               chosen={voted === 'b'}
               revealed={voteStyle === 'reveal' && !!voted}
               pct={pctB}
