@@ -1,4 +1,4 @@
-import type { Comment, CommentReply, Post, ReportCategory, UserProfile } from '@/app/types/dilemma'
+import type { Comment, CommentReply, Post, ReportCategory, UpdateProfilePayload, UserProfile, UserSummary } from '@/app/types/dilemma'
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
 
@@ -56,6 +56,7 @@ interface ApiAuthor {
   profile_pic_url: string | null
   celebrity: boolean
   privacy_status: string
+  is_following?: boolean
 }
 
 interface ApiPost {
@@ -92,6 +93,10 @@ interface ApiPost {
   user_vote: 'A' | 'B' | null
   user_liked: boolean
   user_bookmarked: boolean
+  comment_count: number
+  repost_count: number
+  user_reposted: boolean
+  user_follows_author: boolean
   created_at: string
   updated_at: string
 }
@@ -121,12 +126,14 @@ function daysLeft(endsAt: string | null, timeless: boolean): number {
 }
 
 function adaptPost(api: ApiPost): Post {
+  console.debug('[adaptPost] repost_count:', api.repost_count, 'user_reposted:', api.user_reposted)
   const fullName =
     [api.author.name, api.author.lastname].filter(Boolean).join(' ') ||
     api.author.username
 
   return {
     id: api.id,
+    authorId: api.author.id,
     author: {
       name: fullName,
       handle: `@${api.author.username}`,
@@ -147,11 +154,13 @@ function adaptPost(api: ApiPost): Post {
     },
     votes: { a: api.vote_count_a, b: api.vote_count_b },
     likes: api.like_count,
-    comments: 0,
-    reposts: 0,
+    comments: api.comment_count,
+    reposts: api.repost_count,
     voted: api.user_vote ? (api.user_vote.toLowerCase() as 'a' | 'b') : null,
     liked: api.user_liked,
     saved: api.user_bookmarked,
+    reposted: api.user_reposted,
+    authorFollowed: api.author.is_following ?? api.user_follows_author ?? false,
   }
 }
 
@@ -195,6 +204,21 @@ export async function createPost(payload: CreatePostPayload): Promise<Post> {
     body: JSON.stringify(payload),
   })
   return adaptPost(api)
+}
+
+export async function searchPosts(q: string): Promise<Post[]> {
+  const data = await request<PaginatedResponse<ApiPost>>(`/api/v1/search/posts/?q=${encodeURIComponent(q)}`)
+  return data.results.map(adaptPost)
+}
+
+export async function searchUsers(q: string): Promise<UserSummary[]> {
+  const data = await request<PaginatedResponse<UserSummary>>(`/api/v1/search/users/?q=${encodeURIComponent(q)}`)
+  return data.results
+}
+
+export async function getSuggestedCreators(): Promise<UserSummary[]> {
+  const data = await request<PaginatedResponse<UserSummary>>('/api/v1/search/suggested-creators/')
+  return data.results
 }
 
 export async function getMe(): Promise<UserProfile> {
@@ -342,4 +366,120 @@ export async function reportPost(postId: number, payload: ReportPayload): Promis
     method: 'POST',
     body: JSON.stringify(payload),
   })
+}
+
+export async function reportUser(username: string, payload: ReportPayload): Promise<void> {
+  return request(`/api/v1/users/${username}/report/`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
+
+// --- Users ---
+
+export async function updateMe(payload: UpdateProfilePayload): Promise<UserProfile> {
+  return request<UserProfile>('/api/v1/users/me/', {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  })
+}
+
+export async function getUserByUsername(username: string): Promise<UserSummary> {
+  return request<UserSummary>(`/api/v1/users/${username}/`)
+}
+
+// --- Posts (single + delete) ---
+
+export async function getPost(postId: number): Promise<Post> {
+  const api = await request<ApiPost>(`/api/v1/posts/${postId}/`)
+  return adaptPost(api)
+}
+
+export async function deletePost(postId: number): Promise<void> {
+  return request(`/api/v1/posts/${postId}/`, { method: 'DELETE' })
+}
+
+// --- Follow ---
+
+export async function followUser(userId: number): Promise<void> {
+  return request(`/api/v1/follow/${userId}/`, { method: 'POST' })
+}
+
+export async function unfollowUser(userId: number): Promise<void> {
+  return request(`/api/v1/follow/${userId}/`, { method: 'DELETE' })
+}
+
+export async function getFollowStatus(userId: number): Promise<{ following: boolean }> {
+  return request<{ following: boolean }>(`/api/v1/follow/${userId}/status/`)
+}
+
+export async function getFollowers(userId: number): Promise<UserSummary[]> {
+  const data = await request<PaginatedResponse<UserSummary>>(`/api/v1/follow/${userId}/followers/`)
+  return data.results
+}
+
+export async function getFollowing(userId: number): Promise<UserSummary[]> {
+  const data = await request<PaginatedResponse<UserSummary>>(`/api/v1/follow/${userId}/following/`)
+  return data.results
+}
+
+// --- Feed ---
+
+export async function getFeed(): Promise<Post[]> {
+  const data = await request<PaginatedResponse<ApiPost>>('/api/v1/feed/')
+  return data.results.map(adaptPost)
+}
+
+export async function getPublicFeed(): Promise<Post[]> {
+  const data = await request<PaginatedResponse<ApiPost>>('/api/v1/feed/public/')
+  return data.results.map(adaptPost)
+}
+
+export async function getPrivateFeed(): Promise<Post[]> {
+  const data = await request<PaginatedResponse<ApiPost>>('/api/v1/feed/private/')
+  return data.results.map(adaptPost)
+}
+
+// --- Repost ---
+
+export async function repost(postId: number): Promise<{ reposted: boolean }> {
+  return request<{ reposted: boolean }>(`/api/v1/posts/${postId}/repost/`, { method: 'POST' })
+}
+
+// --- Block ---
+
+export async function blockUser(userId: number): Promise<void> {
+  return request(`/api/v1/users/${userId}/block/`, { method: 'POST' })
+}
+
+export async function unblockUser(userId: number): Promise<void> {
+  return request(`/api/v1/users/${userId}/block/`, { method: 'DELETE' })
+}
+
+// --- Media ---
+
+export async function uploadMedia(file: File): Promise<{ key: string; url: string }> {
+  const token = getToken()
+  const headers: Record<string, string> = {}
+  if (token) headers['Authorization'] = `Bearer ${token}`
+
+  const form = new FormData()
+  form.append('file', file)
+
+  const res = await fetch(`${BASE_URL}/api/v1/media/upload/`, {
+    method: 'POST',
+    headers,
+    body: form,
+  })
+  if (!res.ok) {
+    const body = await res.text().catch(() => '')
+    throw new Error(`API ${res.status} /api/v1/media/upload/${body ? `: ${body}` : ''}`)
+  }
+  return res.json()
+}
+
+// --- Comment delete ---
+
+export async function deleteComment(postId: number, commentId: number): Promise<void> {
+  return request(`/api/v1/posts/${postId}/comments/${commentId}/`, { method: 'DELETE' })
 }

@@ -2,7 +2,7 @@
 
 import Icon from '@/app/components/atoms/Icon'
 
-type Screen = 'feed' | 'trending' | 'notifs' | 'saved' | 'profile'
+type Screen = 'feed' | 'trending' | 'notifs' | 'saved' | 'profile' | 'search'
 
 interface LeftRailProps {
   screen: Screen
@@ -39,6 +39,7 @@ export default function LeftRail({ screen, setScreen, onCompose, openAuth }: Lef
 
       <NavItem icon="home"     label="Inicio"         active={screen === 'feed'}     onClick={() => setScreen('feed')} />
       <NavItem icon="trending" label="Tendencias"     active={screen === 'trending'} onClick={() => setScreen('trending')} />
+      <NavItem icon="search"   label="Buscar"         active={screen === 'search'}   onClick={() => setScreen('search')} />
       <NavItem icon="bell"     label="Notificaciones" active={screen === 'notifs'}   onClick={() => setScreen('notifs')} badge="3" />
       <NavItem icon="bookmark" label="Guardados"      active={screen === 'saved'}    onClick={() => setScreen('saved')} />
       <NavItem icon="profile"  label="Perfil"         active={screen === 'profile'}  onClick={() => setScreen('profile')} />

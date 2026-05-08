@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import FeedScreen from '@/app/components/organisms/FeedScreen'
 import TrendingScreen from '@/app/components/organisms/TrendingScreen'
+import SearchScreen from '@/app/components/organisms/SearchScreen'
 import ProfileScreen from '@/app/components/organisms/ProfileScreen'
 import LeftRail from '@/app/components/organisms/LeftRail'
 import RightRail from '@/app/components/organisms/RightRail'
@@ -15,7 +16,7 @@ import type { ComposePayload } from '@/app/components/organisms/ComposeModal'
 import * as api from '@/app/lib/api'
 import type { Post, VoteStyle } from '@/app/types/dilemma'
 
-type Screen = 'feed' | 'trending' | 'notifs' | 'saved' | 'profile'
+type Screen = 'feed' | 'trending' | 'notifs' | 'saved' | 'profile' | 'search'
 
 export default function Home() {
   const [posts, setPosts] = useState<Post[]>([])
@@ -26,6 +27,7 @@ export default function Home() {
   const [composeOpen, setComposeOpen] = useState(false)
   const [openPostId, setOpenPostId] = useState<number | null>(null)
   const [reportPostId, setReportPostId] = useState<number | null>(null)
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null)
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
@@ -33,6 +35,7 @@ export default function Home() {
 
   useEffect(() => {
     api.getPosts().then(setPosts).catch(console.error)
+    api.getMe().then(me => setCurrentUserId(me.id)).catch(() => {})
   }, [])
 
   const onVote = useCallback(async (id: number, side: 'a' | 'b') => {
@@ -84,6 +87,43 @@ export default function Home() {
     }
   }, [posts])
 
+  const onRepost = useCallback(async (id: number) => {
+    const prev = posts.find(p => p.id === id)
+    if (!prev) return
+
+    setPosts(ps => ps.map(p =>
+      p.id !== id ? p : {
+        ...p,
+        reposted: !p.reposted,
+        reposts: p.reposted ? p.reposts - 1 : p.reposts + 1,
+      }
+    ))
+
+    try {
+      await api.repost(id)
+    } catch (err) {
+      console.error('[repost] failed:', err)
+      setPosts(ps => ps.map(p => p.id === id ? prev : p))
+    }
+  }, [posts])
+
+  const onFollow = useCallback((id: number, following: boolean) => {
+    const post = posts.find(p => p.id === id)
+    if (!post) return
+    setPosts(ps => ps.map(p =>
+      p.authorId !== post.authorId ? p : { ...p, authorFollowed: following }
+    ))
+  }, [posts])
+
+  const onDelete = useCallback(async (id: number) => {
+    setPosts(ps => ps.filter(p => p.id !== id))
+    try {
+      await api.deletePost(id)
+    } catch (err) {
+      console.error('[deletePost] failed:', err)
+    }
+  }, [])
+
   const onPublish = useCallback(async ({ title, aLabel, bLabel, days, tags, aMedia, bMedia }: ComposePayload) => {
     setComposeOpen(false)
 
@@ -117,6 +157,8 @@ export default function Home() {
         <main className="main">
           {screen === 'trending' ? (
             <TrendingScreen posts={posts} setScreen={setScreen} onOpenPost={setOpenPostId} />
+          ) : screen === 'search' ? (
+            <SearchScreen onOpenPost={setOpenPostId} setScreen={setScreen} />
           ) : screen === 'profile' ? (
             <ProfileScreen posts={posts} theme={theme} setTheme={setTheme} voteStyle={voteStyle} setVoteStyle={setVoteStyle} />
           ) : (
@@ -126,9 +168,13 @@ export default function Home() {
               setVoteStyle={setVoteStyle}
               onVote={onVote}
               onLike={onLike}
+              onRepost={onRepost}
               onSave={onSave}
               onOpenPost={setOpenPostId}
               onReport={setReportPostId}
+              onDelete={onDelete}
+              onFollow={onFollow}
+              currentUserId={currentUserId}
             />
           )}
         </main>

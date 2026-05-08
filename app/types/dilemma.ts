@@ -31,7 +31,9 @@ export interface Votes {
 
 export interface Post {
   id: number
+  authorId: number
   author: Author
+  authorFollowed: boolean
   posted: string
   daysLeft: number
   title: string
@@ -45,13 +47,14 @@ export interface Post {
   voted: 'a' | 'b' | null
   liked: boolean
   saved: boolean
+  reposted: boolean
 }
 
-export interface TrendingItem {
-  rank: number
-  title: string
-  votes: string
-  heat: string
+export interface UpdateProfilePayload {
+  name?: string
+  lastname?: string
+  bio?: string
+  privacy_status?: string
 }
 
 export interface Creator {
@@ -88,6 +91,17 @@ export interface Comment {
   userLiked: boolean
   replies: CommentReply[]
   ts: string
+}
+
+export interface UserSummary {
+  id: number
+  username: string
+  name: string
+  lastname: string
+  profile_pic_url: string | null
+  celebrity: boolean
+  privacy_status: string
+  is_following?: boolean
 }
 
 export interface ReportSubcategory {

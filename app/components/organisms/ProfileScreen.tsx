@@ -136,11 +136,15 @@ export default function ProfileScreen({ posts, theme, setTheme, voteStyle, setVo
               key={p.id}
               post={p}
               voteStyle="reveal"
+              currentUserId={user?.id ?? null}
               onVote={() => {}}
               onLike={() => {}}
+              onRepost={() => {}}
               onSave={() => {}}
               onOpen={() => {}}
               onReport={() => {}}
+              onDelete={() => {}}
+              onFollow={() => {}}
             />
           ))
         ) : (

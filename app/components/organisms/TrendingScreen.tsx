@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { fmtCount } from '@/app/lib/utils'
 import type { Post } from '@/app/types/dilemma'
 
-type Screen = 'feed' | 'trending' | 'notifs' | 'saved' | 'profile'
+type Screen = 'feed' | 'trending' | 'notifs' | 'saved' | 'profile' | 'search'
 type Period = 'hoy' | 'semana' | 'mes'
 
 interface TrendingScreenProps {

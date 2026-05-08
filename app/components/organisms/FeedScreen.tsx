@@ -9,13 +9,17 @@ interface FeedScreenProps {
   setVoteStyle: (v: VoteStyle) => void
   onVote: (id: number, side: 'a' | 'b') => void
   onLike: (id: number) => void
+  onRepost: (id: number) => void
   onSave: (id: number) => void
   onOpenPost: (id: number) => void
   onReport: (id: number) => void
+  onDelete: (id: number) => void
+  onFollow: (id: number, following: boolean) => void
+  currentUserId: number | null
 }
 
 export default function FeedScreen({
-  posts, voteStyle, setVoteStyle, onVote, onLike, onSave, onOpenPost, onReport,
+  posts, voteStyle, setVoteStyle, onVote, onLike, onRepost, onSave, onOpenPost, onReport, onDelete, onFollow, currentUserId,
 }: FeedScreenProps) {
   return (
     <div className="screen">
@@ -27,9 +31,13 @@ export default function FeedScreen({
             voteStyle={voteStyle}
             onVote={onVote}
             onLike={onLike}
+            onRepost={onRepost}
             onSave={onSave}
             onOpen={onOpenPost}
             onReport={onReport}
+            onDelete={onDelete}
+            onFollow={onFollow}
+            currentUserId={currentUserId}
           />
         ))}
         <div className="empty-state" style={{ paddingTop: 30 }}>

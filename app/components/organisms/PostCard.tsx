@@ -1,27 +1,48 @@
 'use client'
 
+import { useState, useEffect, useRef } from 'react'
 import Icon from '@/app/components/atoms/Icon'
 import OptionCard from '@/app/components/molecules/OptionCard'
 import SliderVote from '@/app/components/molecules/SliderVote'
 import SplitBar from '@/app/components/molecules/SplitBar'
+import FollowButton from '@/app/components/molecules/FollowButton'
 import { fmtCount } from '@/app/lib/utils'
 import type { Post, VoteStyle } from '@/app/types/dilemma'
 
 interface PostCardProps {
   post: Post
   voteStyle: VoteStyle
+  currentUserId: number | null
   onVote: (id: number, side: 'a' | 'b') => void
   onLike: (id: number) => void
+  onRepost: (id: number) => void
   onSave: (id: number) => void
   onOpen: (id: number) => void
   onReport: (id: number) => void
+  onDelete: (id: number) => void
+  onFollow: (id: number, following: boolean) => void
 }
 
-export default function PostCard({ post, voteStyle, onVote, onLike, onSave, onOpen, onReport }: PostCardProps) {
+export default function PostCard({ post, voteStyle, currentUserId, onVote, onLike, onRepost, onSave, onOpen, onReport, onDelete, onFollow }: PostCardProps) {
   const total = post.votes.a + post.votes.b || 1
   const pctA = Math.round((post.votes.a / total) * 100)
   const pctB = 100 - pctA
   const voted = post.voted
+  const isOwner = currentUserId !== null && post.authorId === currentUserId
+
+  const [menuOpen, setMenuOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!menuOpen) return
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [menuOpen])
 
   return (
     <article className="post">
@@ -31,14 +52,37 @@ export default function PostCard({ post, voteStyle, onVote, onLike, onSave, onOp
           <div className="name">{post.author.name}</div>
           <div className="meta">{post.author.handle} · {post.posted}</div>
         </div>
-        <button className="follow">Seguir</button>
-        <button className="more" aria-label="Más opciones" onClick={() => onReport(post.id)}><Icon name="more" /></button>
+        <div className="post-head-actions">
+        {!isOwner && (
+          <FollowButton
+            userId={post.authorId}
+            initialFollowing={post.authorFollowed}
+            variant="pill"
+            onFollowChange={following => onFollow(post.id, following)}
+          />
+        )}
+        <div className="more-menu" ref={menuRef}>
+          <button className="more" aria-label="Más opciones" onClick={() => setMenuOpen(o => !o)}>
+            <Icon name="more" />
+          </button>
+          {menuOpen && (
+            <div className="more-dropdown">
+              <button className="more-item" onClick={() => { setMenuOpen(false); onReport(post.id) }}>
+                Reportar
+              </button>
+              {isOwner && (
+                <button className="more-item more-item--danger" onClick={() => { setMenuOpen(false); onDelete(post.id) }}>
+                  Eliminar dilema
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+        </div>
       </div>
 
       <h2 className="post-title">{post.title}</h2>
       <div className="post-meta-row">
-        <span className="countdown">{post.daysLeft} días restantes</span>
-        <span className="dot" />
         <span>{fmtCount(total)} votos</span>
       </div>
 
@@ -97,13 +141,13 @@ export default function PostCard({ post, voteStyle, onVote, onLike, onSave, onOp
       <div className="post-actions">
         <button className={`action-btn${post.liked ? ' active' : ''}`} onClick={() => onLike(post.id)}>
           <Icon name={post.liked ? 'heart-fill' : 'heart'} />
-          <span className="count">{fmtCount(post.likes + (post.liked ? 1 : 0))}</span>
+          <span className="count">{fmtCount(post.likes)}</span>
         </button>
         <button className="action-btn" onClick={() => onOpen(post.id)}>
           <Icon name="chat" />
           <span className="count">{fmtCount(post.comments)}</span>
         </button>
-        <button className="action-btn">
+        <button className={`action-btn${post.reposted ? ' active' : ''}`} onClick={() => onRepost(post.id)}>
           <Icon name="repost" />
           <span className="count">{fmtCount(post.reposts)}</span>
         </button>
