@@ -10,10 +10,10 @@ import type { Post, VoteStyle } from '@/app/types/dilemma'
 interface PostCardProps {
   post: Post
   voteStyle: VoteStyle
-  onVote: (id: number, side: 'a' | 'b') => void
-  onLike: (id: number) => void
-  onSave: (id: number) => void
-  onOpen: (id: number) => void
+  onVote: (id: string, side: 'a' | 'b') => void
+  onLike: (id: string) => void
+  onSave: (id: string) => void
+  onOpen: (id: string) => void
 }
 
 export default function PostCard({ post, voteStyle, onVote, onLike, onSave, onOpen }: PostCardProps) {

@@ -17,7 +17,7 @@ export interface Votes {
 }
 
 export interface Post {
-  id: number
+  id: string
   author: Author
   posted: string
   daysLeft: number

@@ -2,7 +2,7 @@ import type { Post, Comment, TrendingItem, Creator } from '@/app/types/dilemma'
 
 export const FEED: Post[] = [
   {
-    id: 1,
+    id: '1',
     author: { name: 'Camila Ruiz', handle: '@camila', initial: 'C' },
     posted: 'hace 2 h',
     daysLeft: 4,
@@ -14,7 +14,7 @@ export const FEED: Post[] = [
     likes: 14500, comments: 1240, reposts: 320, voted: null, liked: false, saved: false,
   },
   {
-    id: 2,
+    id: '2',
     author: { name: 'Diego Alonso', handle: '@diego.mx', initial: 'D' },
     posted: 'hace 5 h',
     daysLeft: 2,
@@ -26,7 +26,7 @@ export const FEED: Post[] = [
     likes: 23100, comments: 3102, reposts: 891, voted: null, liked: false, saved: false,
   },
   {
-    id: 3,
+    id: '3',
     author: { name: 'María Solís', handle: '@mariasol', initial: 'M' },
     posted: 'hace 1 d',
     daysLeft: 7,
@@ -38,7 +38,7 @@ export const FEED: Post[] = [
     likes: 5830, comments: 420, reposts: 112, voted: null, liked: false, saved: false,
   },
   {
-    id: 4,
+    id: '4',
     author: { name: 'Tomás Vera', handle: '@tverx', initial: 'T' },
     posted: 'hace 1 d',
     daysLeft: 3,
@@ -50,7 +50,7 @@ export const FEED: Post[] = [
     likes: 18200, comments: 2104, reposts: 543, voted: null, liked: false, saved: false,
   },
   {
-    id: 5,
+    id: '5',
     author: { name: 'Paula Kahn', handle: '@paulak', initial: 'P' },
     posted: 'hace 2 d',
     daysLeft: 6,
@@ -78,13 +78,13 @@ export const CREATORS: Creator[] = [
   { name: 'Iván Ortega',   handle: '@ivano',   initial: 'I', followers: '19.4K' },
 ]
 
-export const COMMENTS: Record<number, Comment[]> = {
-  1: [
+export const COMMENTS: Record<string, Comment[]> = {
+  '1': [
     { name: 'Sofía', initial: 'S', side: 'b', ts: '1 h', text: 'Across cambió el lenguaje de la animación. No hay discusión.', likes: 184 },
     { name: 'Héctor', initial: 'H', side: 'a', ts: '2 h', text: 'La primera es más limpia, más compacta. Una carta de amor al medio.', likes: 92 },
     { name: 'Nadia', initial: 'N', side: 'b', ts: '3 h', text: 'El frame-rate mixto en Across es arte puro.', likes: 57 },
   ],
-  2: [
+  '2': [
     { name: 'Pablo', initial: 'P', side: 'a', ts: '30 min', text: 'Pastor con piña y ya, no hay más que decir.', likes: 312 },
     { name: 'Ana', initial: 'A', side: 'b', ts: '1 h', text: 'Suadero bien dorado es otro nivel. Con salsa verde 🌶', likes: 204 },
   ],

@@ -10,7 +10,7 @@ type Period = 'hoy' | 'semana' | 'mes'
 interface TrendingScreenProps {
   posts: Post[]
   setScreen: (s: Screen) => void
-  onOpenPost: (id: number) => void
+  onOpenPost: (id: string) => void
 }
 
 export default function TrendingScreen({ posts, setScreen, onOpenPost }: TrendingScreenProps) {
