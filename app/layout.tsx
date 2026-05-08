@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Outfit, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
+import Providers from './providers'
 
 const outfit = Outfit({
   subsets: ['latin'],
@@ -22,7 +23,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es" className={`${outfit.variable} ${jetbrainsMono.variable}`}>
-      <body>{children}</body>
+      <body><Providers>{children}</Providers></body>
     </html>
   )
 }

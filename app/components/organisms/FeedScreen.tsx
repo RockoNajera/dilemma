@@ -7,10 +7,10 @@ interface FeedScreenProps {
   posts: Post[]
   voteStyle: VoteStyle
   setVoteStyle: (v: VoteStyle) => void
-  onVote: (id: number, side: 'a' | 'b') => void
-  onLike: (id: number) => void
-  onSave: (id: number) => void
-  onOpenPost: (id: number) => void
+  onVote: (id: string, side: 'a' | 'b') => void
+  onLike: (id: string) => void
+  onSave: (id: string) => void
+  onOpenPost: (id: string) => void
 }
 
 export default function FeedScreen({
