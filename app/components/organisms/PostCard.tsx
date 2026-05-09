@@ -17,7 +17,7 @@ interface PostCardProps {
   onLike: (id: number) => void
   onRepost: (id: number) => void
   onSave: (id: number) => void
-  onOpen: (id: number) => void
+  onOpen: (post: { id: number; title: string }) => void
   onReport: (id: number) => void
   onDelete: (id: number) => void
   onFollow: (id: number, following: boolean) => void
@@ -103,7 +103,7 @@ export default function PostCard({ post, voteStyle, currentUserId, onVote, onLik
           </div>
           <SliderVote
             committed={!!voted}
-            initialPct={voted === 'a' ? pctA : voted === 'b' ? pctA : 50}
+            initialPct={voted === 'a' ? pctA : voted === 'b' ? pctB : 50}
             onCommit={(side) => onVote(post.id, side)}
           />
         </>
@@ -134,7 +134,7 @@ export default function PostCard({ post, voteStyle, currentUserId, onVote, onLik
 
       {post.tags.length > 0 && (
         <div className="tags">
-          {post.tags.map(t => <span key={t} className="tag">{t}</span>)}
+          {post.tags.map((t, i) => <span key={i} className="tag">{t}</span>)}
         </div>
       )}
 
@@ -143,7 +143,7 @@ export default function PostCard({ post, voteStyle, currentUserId, onVote, onLik
           <Icon name={post.liked ? 'heart-fill' : 'heart'} />
           <span className="count">{fmtCount(post.likes)}</span>
         </button>
-        <button className="action-btn" onClick={() => onOpen(post.id)}>
+        <button className="action-btn" onClick={() => onOpen(post)}>
           <Icon name="chat" />
           <span className="count">{fmtCount(post.comments)}</span>
         </button>

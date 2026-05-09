@@ -3,15 +3,13 @@
 import { useState, useEffect, useRef } from 'react'
 import Icon from '@/app/components/atoms/Icon'
 import FollowButton from '@/app/components/molecules/FollowButton'
-import { fmtCount } from '@/app/lib/utils'
+import { fmtCount, fmtFullName } from '@/app/lib/utils'
 import * as api from '@/app/lib/api'
-import type { Post, UserSummary } from '@/app/types/dilemma'
-
-type Screen = 'feed' | 'trending' | 'notifs' | 'saved' | 'profile' | 'search'
+import type { Post, Screen, UserSummary } from '@/app/types/dilemma'
 type Tab = 'posts' | 'users'
 
 interface SearchScreenProps {
-  onOpenPost: (id: number) => void
+  onOpenPost: (post: { id: number; title: string }) => void
   setScreen: (s: Screen) => void
 }
 
@@ -33,7 +31,7 @@ function PostResult({ post, onOpen }: { post: Post; onOpen: () => void }) {
 }
 
 function UserResult({ user }: { user: UserSummary }) {
-  const fullName = [user.name, user.lastname].filter(Boolean).join(' ') || user.username
+  const fullName = fmtFullName(user.name, user.lastname, user.username)
   const initial = fullName.charAt(0).toUpperCase()
   return (
     <div className="creator-item">
@@ -138,7 +136,7 @@ export default function SearchScreen({ onOpenPost, setScreen }: SearchScreenProp
                 <PostResult
                   key={p.id}
                   post={p}
-                  onOpen={() => { setScreen('feed'); setTimeout(() => onOpenPost(p.id), 50) }}
+                  onOpen={() => { setScreen('feed'); onOpenPost(p) }}
                 />
               ))}
             </div>

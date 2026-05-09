@@ -9,10 +9,11 @@ import type { Comment, CommentReply } from '@/app/types/dilemma'
 interface CommentDrawerProps {
   postId: number
   postTitle: string
+  currentUserInitial: string
   onClose: () => void
 }
 
-export default function CommentDrawer({ postId, postTitle, onClose }: CommentDrawerProps) {
+export default function CommentDrawer({ postId, postTitle, currentUserInitial, onClose }: CommentDrawerProps) {
   const [comments, setComments] = useState<Comment[]>([])
   const [loading, setLoading] = useState(true)
   const [text, setText] = useState('')
@@ -137,7 +138,7 @@ export default function CommentDrawer({ postId, postTitle, onClose }: CommentDra
             </div>
           )}
           <div className="comment-composer">
-            <div className="avatar" style={{ width: 34, height: 34, fontSize: 14, flexShrink: 0 }}>U</div>
+            <div className="avatar" style={{ width: 34, height: 34, fontSize: 14, flexShrink: 0 }}>{currentUserInitial}</div>
             <input
               ref={inputRef}
               value={text}

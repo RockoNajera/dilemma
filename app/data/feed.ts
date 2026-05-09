@@ -12,7 +12,7 @@ export const FEED: Post[] = [
     a: { label: 'Into the Spider-Verse', caption: 'OPTION A · 2018 · Lord & Miller' },
     b: { label: 'Across the Spider-Verse', caption: 'OPTION B · 2023 · Dos Santos' },
     votes: { a: 8421, b: 6190 },
-    likes: 14500, comments: 1240, reposts: 320, voted: null, liked: false, saved: false, reposted: false, authorFollowed: false,
+    timeless: false, likes: 14500, comments: 1240, reposts: 320, voted: null, liked: false, saved: false, reposted: false, authorFollowed: false,
   },
   {
     id: 2,
@@ -25,7 +25,7 @@ export const FEED: Post[] = [
     a: { label: 'Al Pastor', caption: 'OPTION A · cerdo adobado · piña' },
     b: { label: 'Suadero', caption: 'OPTION B · res · jugoso' },
     votes: { a: 12040, b: 9821 },
-    likes: 23100, comments: 3102, reposts: 891, voted: null, liked: false, saved: false, reposted: false, authorFollowed: false,
+    timeless: false, likes: 23100, comments: 3102, reposts: 891, voted: null, liked: false, saved: false, reposted: false, authorFollowed: false,
   },
   {
     id: 3,
@@ -38,7 +38,7 @@ export const FEED: Post[] = [
     a: { label: 'Café de olla', caption: 'OPTION A · piloncillo · canela' },
     b: { label: 'Espresso doble', caption: 'OPTION B · 18g · 30s' },
     votes: { a: 3402, b: 4981 },
-    likes: 5830, comments: 420, reposts: 112, voted: null, liked: false, saved: false, reposted: false, authorFollowed: false,
+    timeless: false, likes: 5830, comments: 420, reposts: 112, voted: null, liked: false, saved: false, reposted: false, authorFollowed: false,
   },
   {
     id: 4,
@@ -51,7 +51,7 @@ export const FEED: Post[] = [
     a: { label: 'Desde casa', caption: 'OPTION A · pijama · 0 commute' },
     b: { label: 'Oficina', caption: 'OPTION B · ritual · café con colegas' },
     votes: { a: 15802, b: 8340 },
-    likes: 18200, comments: 2104, reposts: 543, voted: null, liked: false, saved: false, reposted: false, authorFollowed: false,
+    timeless: false, likes: 18200, comments: 2104, reposts: 543, voted: null, liked: false, saved: false, reposted: false, authorFollowed: false,
   },
   {
     id: 5,
@@ -64,7 +64,7 @@ export const FEED: Post[] = [
     a: { label: 'Playa', caption: 'OPTION A · arena · mezcal · sol' },
     b: { label: 'Montaña', caption: 'OPTION B · bosque · fogata · silencio' },
     votes: { a: 6210, b: 7120 },
-    likes: 9800, comments: 870, reposts: 241, voted: null, liked: false, saved: false, reposted: false, authorFollowed: false,
+    timeless: false, likes: 9800, comments: 870, reposts: 241, voted: null, liked: false, saved: false, reposted: false, authorFollowed: false,
   },
 ]
 

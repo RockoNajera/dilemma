@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Icon from '@/app/components/atoms/Icon'
 import PostCard from '@/app/components/organisms/PostCard'
 import * as api from '@/app/lib/api'
-import { fmtCount } from '@/app/lib/utils'
+import { fmtCount, fmtFullName } from '@/app/lib/utils'
 import type { Post, UserProfile, VoteStyle } from '@/app/types/dilemma'
 
 interface ProfileScreenProps {
@@ -13,11 +13,20 @@ interface ProfileScreenProps {
   setTheme: (t: 'light' | 'dark') => void
   voteStyle: VoteStyle
   setVoteStyle: (v: VoteStyle) => void
+  currentUserId: number | null
+  onVote: (id: number, side: 'a' | 'b') => void
+  onLike: (id: number) => void
+  onRepost: (id: number) => void
+  onSave: (id: number) => void
+  onFollow: (id: number, following: boolean) => void
+  onDelete: (id: number) => void
+  onOpenPost: (post: { id: number; title: string }) => void
+  onReport: (id: number) => void
 }
 
 type Tab = 'dilemas' | 'votos' | 'comentarios' | 'guardados'
 
-export default function ProfileScreen({ posts, theme, setTheme, voteStyle, setVoteStyle }: ProfileScreenProps) {
+export default function ProfileScreen({ posts, theme, setTheme, voteStyle, setVoteStyle, currentUserId, onVote, onLike, onRepost, onSave, onFollow, onDelete, onOpenPost, onReport }: ProfileScreenProps) {
   const [tab, setTab] = useState<Tab>('dilemas')
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [user, setUser] = useState<UserProfile | null>(null)
@@ -34,7 +43,7 @@ export default function ProfileScreen({ posts, theme, setTheme, voteStyle, setVo
   }, [])
 
   const displayName = user
-    ? [user.name, user.lastname].filter(Boolean).join(' ') || user.username
+    ? fmtFullName(user.name, user.lastname, user.username)
     : '—'
   const handle = user ? `@${user.username}` : ''
   const initial = displayName.charAt(0).toUpperCase()
@@ -135,16 +144,16 @@ export default function ProfileScreen({ posts, theme, setTheme, voteStyle, setVo
             <PostCard
               key={p.id}
               post={p}
-              voteStyle="reveal"
-              currentUserId={user?.id ?? null}
-              onVote={() => {}}
-              onLike={() => {}}
-              onRepost={() => {}}
-              onSave={() => {}}
-              onOpen={() => {}}
-              onReport={() => {}}
-              onDelete={() => {}}
-              onFollow={() => {}}
+              voteStyle={voteStyle}
+              currentUserId={currentUserId}
+              onVote={onVote}
+              onLike={onLike}
+              onRepost={onRepost}
+              onSave={onSave}
+              onOpen={onOpenPost}
+              onReport={onReport}
+              onDelete={onDelete}
+              onFollow={onFollow}
             />
           ))
         ) : (

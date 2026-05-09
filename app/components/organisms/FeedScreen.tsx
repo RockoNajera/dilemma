@@ -11,7 +11,7 @@ interface FeedScreenProps {
   onLike: (id: number) => void
   onRepost: (id: number) => void
   onSave: (id: number) => void
-  onOpenPost: (id: number) => void
+  onOpenPost: (post: { id: number; title: string }) => void
   onReport: (id: number) => void
   onDelete: (id: number) => void
   onFollow: (id: number, following: boolean) => void

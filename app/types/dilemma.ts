@@ -1,4 +1,5 @@
 export type VoteStyle = 'reveal' | 'tap' | 'slider'
+export type Screen = 'feed' | 'trending' | 'notifs' | 'saved' | 'profile' | 'search'
 
 export interface UserProfile {
   id: number
@@ -36,6 +37,7 @@ export interface Post {
   authorFollowed: boolean
   posted: string
   daysLeft: number
+  timeless: boolean
   title: string
   tags: string[]
   a: PostOption

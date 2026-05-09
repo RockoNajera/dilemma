@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Icon from '@/app/components/atoms/Icon'
 
 export interface ComposePayload {
@@ -68,7 +68,10 @@ async function handleFiles(
         reader.readAsDataURL(file)
       })
 
-  set(prev => ({ ...prev, upload: { type: isVideo ? 'video' : 'image', url } }))
+  set(prev => {
+    if (prev.upload?.type === 'video') URL.revokeObjectURL(prev.upload.url)
+    return { ...prev, upload: { type: isVideo ? 'video' : 'image', url } }
+  })
 }
 
 function resolveSideMedia(s: SideState): { type: 'image' | 'video' | 'youtube'; url: string } | null {
@@ -132,7 +135,7 @@ function SideZone({
             <video src={s.upload.url} autoPlay muted loop playsInline style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
           )}
           {s.upload && (
-            <button className="compose-drop-remove" onClick={e => { e.stopPropagation(); set(p => ({ ...p, upload: null })) }} aria-label="Eliminar">
+            <button className="compose-drop-remove" onClick={e => { e.stopPropagation(); if (s.upload?.type === 'video') URL.revokeObjectURL(s.upload.url); set(p => ({ ...p, upload: null })) }} aria-label="Eliminar">
               <Icon name="close" />
             </button>
           )}
@@ -184,13 +187,24 @@ export default function ComposeModal({ onClose, onPublish }: ComposeModalProps) 
   const [title, setTitle] = useState('')
   const [aLabel, setALabel] = useState('')
   const [bLabel, setBLabel] = useState('')
-  const [days] = useState(7)
+  const days = 365
   const [tags, setTags] = useState('')
   const [a, setA] = useState<SideState>(INIT)
   const [b, setB] = useState<SideState>(INIT)
 
   const aRef = useRef<HTMLInputElement | null>(null)
   const bRef = useRef<HTMLInputElement | null>(null)
+  const aUploadRef = useRef(a.upload)
+  const bUploadRef = useRef(b.upload)
+  aUploadRef.current = a.upload
+  bUploadRef.current = b.upload
+
+  useEffect(() => {
+    return () => {
+      if (aUploadRef.current?.type === 'video') URL.revokeObjectURL(aUploadRef.current.url)
+      if (bUploadRef.current?.type === 'video') URL.revokeObjectURL(bUploadRef.current.url)
+    }
+  }, [])
 
   const canPublish = title && aLabel && bLabel
 

@@ -1,4 +1,5 @@
 import type { Comment, CommentReply, Post, ReportCategory, UpdateProfilePayload, UserProfile, UserSummary } from '@/app/types/dilemma'
+import { fmtFullName } from '@/app/lib/utils'
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
 
@@ -126,10 +127,7 @@ function daysLeft(endsAt: string | null, timeless: boolean): number {
 }
 
 function adaptPost(api: ApiPost): Post {
-  console.debug('[adaptPost] repost_count:', api.repost_count, 'user_reposted:', api.user_reposted)
-  const fullName =
-    [api.author.name, api.author.lastname].filter(Boolean).join(' ') ||
-    api.author.username
+  const fullName = fmtFullName(api.author.name, api.author.lastname, api.author.username)
 
   return {
     id: api.id,
@@ -141,6 +139,7 @@ function adaptPost(api: ApiPost): Post {
     },
     posted: timeAgo(api.created_at),
     daysLeft: daysLeft(api.ends_at, api.timeless),
+    timeless: api.timeless,
     title: api.title,
     // tags is stored as a TextField; split on whitespace/commas
     tags: api.tags ? api.tags.split(/[\s,]+/).filter(Boolean) : [],
@@ -274,7 +273,7 @@ interface ApiComment {
 }
 
 function adaptCommentAuthor(api: ApiCommentAuthor) {
-  const fullName = [api.name, api.lastname].filter(Boolean).join(' ') || api.username
+  const fullName = fmtFullName(api.name, api.lastname, api.username)
   return { id: api.id, username: api.username, name: fullName, initial: fullName.charAt(0).toUpperCase() }
 }
 

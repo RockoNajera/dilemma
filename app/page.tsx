@@ -14,9 +14,8 @@ import ReportModal from '@/app/components/organisms/ReportModal'
 import MobileTabbar from '@/app/components/organisms/MobileTabbar'
 import type { ComposePayload } from '@/app/components/organisms/ComposeModal'
 import * as api from '@/app/lib/api'
-import type { Post, VoteStyle } from '@/app/types/dilemma'
-
-type Screen = 'feed' | 'trending' | 'notifs' | 'saved' | 'profile' | 'search'
+import { fmtFullName } from '@/app/lib/utils'
+import type { Post, Screen, VoteStyle } from '@/app/types/dilemma'
 
 export default function Home() {
   const [posts, setPosts] = useState<Post[]>([])
@@ -25,9 +24,10 @@ export default function Home() {
   const [screen, setScreen] = useState<Screen>('feed')
   const [authOpen, setAuthOpen] = useState(false)
   const [composeOpen, setComposeOpen] = useState(false)
-  const [openPostId, setOpenPostId] = useState<number | null>(null)
+  const [openPost, setOpenPost] = useState<{ id: number; title: string } | null>(null)
   const [reportPostId, setReportPostId] = useState<number | null>(null)
   const [currentUserId, setCurrentUserId] = useState<number | null>(null)
+  const [currentUserInitial, setCurrentUserInitial] = useState('U')
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
@@ -35,7 +35,10 @@ export default function Home() {
 
   useEffect(() => {
     api.getPosts().then(setPosts).catch(console.error)
-    api.getMe().then(me => setCurrentUserId(me.id)).catch(() => {})
+    api.getMe().then(me => {
+      setCurrentUserId(me.id)
+      setCurrentUserInitial(fmtFullName(me.name, me.lastname, me.username).charAt(0).toUpperCase())
+    }).catch(console.error)
   }, [])
 
   const onVote = useCallback(async (id: number, side: 'a' | 'b') => {
@@ -62,7 +65,7 @@ export default function Home() {
     if (!prev) return
 
     setPosts(ps => ps.map(p =>
-      p.id !== id ? p : { ...p, liked: !p.liked }
+      p.id !== id ? p : { ...p, liked: !p.liked, likes: p.liked ? p.likes - 1 : p.likes + 1 }
     ))
 
     try {
@@ -116,13 +119,15 @@ export default function Home() {
   }, [posts])
 
   const onDelete = useCallback(async (id: number) => {
+    const snapshot = posts
     setPosts(ps => ps.filter(p => p.id !== id))
     try {
       await api.deletePost(id)
     } catch (err) {
       console.error('[deletePost] failed:', err)
+      setPosts(snapshot)
     }
-  }, [])
+  }, [posts])
 
   const onPublish = useCallback(async ({ title, aLabel, bLabel, days, tags, aMedia, bMedia }: ComposePayload) => {
     setComposeOpen(false)
@@ -156,11 +161,24 @@ export default function Home() {
         <LeftRail screen={screen} setScreen={setScreen} onCompose={() => setComposeOpen(true)} openAuth={() => setAuthOpen(true)} />
         <main className="main">
           {screen === 'trending' ? (
-            <TrendingScreen posts={posts} setScreen={setScreen} onOpenPost={setOpenPostId} />
+            <TrendingScreen posts={posts} setScreen={setScreen} onOpenPost={p => setOpenPost(p)} />
           ) : screen === 'search' ? (
-            <SearchScreen onOpenPost={setOpenPostId} setScreen={setScreen} />
+            <SearchScreen onOpenPost={p => setOpenPost(p)} setScreen={setScreen} />
           ) : screen === 'profile' ? (
-            <ProfileScreen posts={posts} theme={theme} setTheme={setTheme} voteStyle={voteStyle} setVoteStyle={setVoteStyle} />
+            <ProfileScreen
+              posts={posts}
+              theme={theme} setTheme={setTheme}
+              voteStyle={voteStyle} setVoteStyle={setVoteStyle}
+              currentUserId={currentUserId}
+              onVote={onVote}
+              onLike={onLike}
+              onRepost={onRepost}
+              onSave={onSave}
+              onFollow={onFollow}
+              onDelete={onDelete}
+              onOpenPost={p => setOpenPost(p)}
+              onReport={setReportPostId}
+            />
           ) : (
             <FeedScreen
               posts={posts}
@@ -170,7 +188,7 @@ export default function Home() {
               onLike={onLike}
               onRepost={onRepost}
               onSave={onSave}
-              onOpenPost={setOpenPostId}
+              onOpenPost={p => setOpenPost(p)}
               onReport={setReportPostId}
               onDelete={onDelete}
               onFollow={onFollow}
@@ -185,16 +203,14 @@ export default function Home() {
 
       {authOpen && <AuthModal onClose={() => setAuthOpen(false)} />}
       {composeOpen && <ComposeModal onClose={() => setComposeOpen(false)} onPublish={onPublish} />}
-      {openPostId !== null && (() => {
-        const p = posts.find(p => p.id === openPostId)
-        return p ? (
-          <CommentDrawer
-            postId={p.id}
-            postTitle={p.title}
-            onClose={() => setOpenPostId(null)}
-          />
-        ) : null
-      })()}
+      {openPost !== null && (
+        <CommentDrawer
+          postId={openPost.id}
+          postTitle={openPost.title}
+          currentUserInitial={currentUserInitial}
+          onClose={() => setOpenPost(null)}
+        />
+      )}
       {reportPostId !== null && (
         <ReportModal postId={reportPostId} onClose={() => setReportPostId(null)} />
       )}

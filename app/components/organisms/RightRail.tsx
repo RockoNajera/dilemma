@@ -3,28 +3,24 @@
 import { useState, useEffect } from 'react'
 import Icon from '@/app/components/atoms/Icon'
 import FollowButton from '@/app/components/molecules/FollowButton'
-import { FEED } from '@/app/data/feed'
 import * as api from '@/app/lib/api'
-import type { UserSummary } from '@/app/types/dilemma'
-
-type Screen = 'feed' | 'trending' | 'notifs' | 'saved' | 'profile' | 'search'
+import { fmtCount, fmtFullName } from '@/app/lib/utils'
+import type { Post, Screen, UserSummary } from '@/app/types/dilemma'
 
 interface RightRailProps {
   setScreen: (s: Screen) => void
 }
 
-const trending = [...FEED]
-  .sort((a, b) => (b.votes.a + b.votes.b) - (a.votes.a + a.votes.b))
-  .slice(0, 5)
-
-function formatVotes(n: number): string {
-  return n >= 1000 ? `${(n / 1000).toFixed(1)}K` : String(n)
-}
-
 export default function RightRail({ setScreen }: RightRailProps) {
+  const [trending, setTrending] = useState<Post[]>([])
   const [creators, setCreators] = useState<UserSummary[]>([])
 
   useEffect(() => {
+    api.getPublicFeed()
+      .then(posts => setTrending(
+        [...posts].sort((a, b) => (b.votes.a + b.votes.b) - (a.votes.a + a.votes.b)).slice(0, 5)
+      ))
+      .catch(console.error)
     api.getSuggestedCreators().then(data => setCreators(data.slice(0, 5))).catch(console.error)
   }, [])
 
@@ -39,7 +35,7 @@ export default function RightRail({ setScreen }: RightRailProps) {
             <div className="trend-rank">{String(i + 1).padStart(2, '0')}</div>
             <div className="trend-body">
               <div className="trend-title">{t.title}</div>
-              <div className="trend-meta">{formatVotes(t.votes.a + t.votes.b)} votos · {t.tags[0]}</div>
+              <div className="trend-meta">{fmtCount(t.votes.a + t.votes.b)} votos · {t.tags[0]}</div>
             </div>
           </div>
         ))}
@@ -48,7 +44,7 @@ export default function RightRail({ setScreen }: RightRailProps) {
       <div className="panel">
         <h3>Creadores para seguir</h3>
         {creators.map(c => {
-          const fullName = [c.name, c.lastname].filter(Boolean).join(' ') || c.username
+          const fullName = fmtFullName(c.name, c.lastname, c.username)
           const initial = fullName.charAt(0).toUpperCase()
           return (
             <div key={c.id} className="creator-item">
