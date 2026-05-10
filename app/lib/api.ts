@@ -35,7 +35,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     'Content-Type': 'application/json',
     ...(options.headers as Record<string, string>),
   }
-  if (token) headers['Authorization'] = `Bearer ${token}`
+  if (token) headers['Authorization'] = `Token Bearer ${token}`
 
   const res = await fetch(`${BASE_URL}${path}`, { ...options, headers })
 
@@ -460,7 +460,7 @@ export async function unblockUser(userId: number): Promise<void> {
 export async function uploadMedia(file: File): Promise<{ key: string; url: string }> {
   const token = getToken()
   const headers: Record<string, string> = {}
-  if (token) headers['Authorization'] = `Bearer ${token}`
+  if (token) headers['Authorization'] = `Token Bearer ${token}`
 
   const form = new FormData()
   form.append('file', file)
