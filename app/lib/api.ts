@@ -2,11 +2,12 @@ import type { Comment, CommentReply, Post, ReportCategory, UpdateProfilePayload,
 import { fmtFullName } from '@/app/lib/utils'
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
+const CDN_BASE = 'https://d23owewpb9u2gj.cloudfront.net'
 
 // --- Token store ---
-// Auth context will call setToken() when the user signs in/out.
-// In local dev, NEXT_PUBLIC_DEV_TOKEN seeds the token automatically (see .env.local).
 let _token: string | null = null
+// Injected by AuthContext to handle 401 → refresh → retry without a circular import.
+let _onUnauthorized: (() => Promise<string | null>) | null = null
 
 export function setToken(token: string | null): void {
   _token = token
@@ -27,17 +28,30 @@ export function getToken(): string | null {
   return _token
 }
 
+export function setUnauthorizedHandler(handler: (() => Promise<string | null>) | null): void {
+  _onUnauthorized = handler
+}
+
 // --- Internal fetch wrapper ---
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const token = getToken()
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...(options.headers as Record<string, string>),
+  const doFetch = (token: string | null) => {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...(options.headers as Record<string, string>),
+    }
+    if (token) headers['Authorization'] = `Bearer ${token}`
+    return fetch(`${BASE_URL}${path}`, { ...options, headers })
   }
-  if (token) headers['Authorization'] = `Token Bearer ${token}`
 
-  const res = await fetch(`${BASE_URL}${path}`, { ...options, headers })
+  let res = await doFetch(getToken())
+
+  if (res.status === 401 && _onUnauthorized) {
+    const newToken = await _onUnauthorized()
+    if (newToken) {
+      res = await doFetch(newToken)
+    }
+  }
 
   if (!res.ok) {
     const body = await res.text().catch(() => '')
@@ -126,6 +140,12 @@ function daysLeft(endsAt: string | null, timeless: boolean): number {
   return Math.max(0, Math.ceil((new Date(endsAt).getTime() - Date.now()) / 86_400_000))
 }
 
+function inferMediaType(url: string | null): 'image' | 'video' | null {
+  if (!url) return null
+  const ext = url.split('?')[0].split('.').pop()?.toLowerCase()
+  return ['mp4', 'webm', 'mov', 'avi', 'mkv'].includes(ext ?? '') ? 'video' : 'image'
+}
+
 function adaptPost(api: ApiPost): Post {
   const fullName = fmtFullName(api.author.name, api.author.lastname, api.author.username)
 
@@ -146,10 +166,14 @@ function adaptPost(api: ApiPost): Post {
     a: {
       label: api.first_textual_content || 'Opción A',
       caption: `OPTION A · ${api.first_textual_content || 'Opción A'}`,
+      mediaUrl: api.first_content_url ?? null,
+      mediaType: inferMediaType(api.first_content_url),
     },
     b: {
       label: api.second_textual_content || 'Opción B',
       caption: `OPTION B · ${api.second_textual_content || 'Opción B'}`,
+      mediaUrl: api.second_content_url ?? null,
+      mediaType: inferMediaType(api.second_content_url),
     },
     votes: { a: api.vote_count_a, b: api.vote_count_b },
     likes: api.like_count,
@@ -192,9 +216,11 @@ export interface CreatePostPayload {
   title: string
   first_textual_content: string
   second_textual_content: string
-  post_type: 'text'
+  post_type: string
   tags: string
   ends_at: string | null
+  first_content_url?: string | null
+  second_content_url?: string | null
 }
 
 export async function createPost(payload: CreatePostPayload): Promise<Post> {
@@ -459,22 +485,28 @@ export async function unblockUser(userId: number): Promise<void> {
 
 export async function uploadMedia(file: File): Promise<{ key: string; url: string }> {
   const token = getToken()
-  const headers: Record<string, string> = {}
-  if (token) headers['Authorization'] = `Token Bearer ${token}`
+  const presignHeaders: Record<string, string> = { 'Content-Type': 'application/json' }
+  if (token) presignHeaders['Authorization'] = `Bearer ${token}`
 
-  const form = new FormData()
-  form.append('file', file)
-
-  const res = await fetch(`${BASE_URL}/api/v1/media/upload/`, {
+  const presignRes = await fetch(`${BASE_URL}/uploads/presign`, {
     method: 'POST',
-    headers,
-    body: form,
+    headers: presignHeaders,
+    body: JSON.stringify({ content_type: file.type }),
   })
-  if (!res.ok) {
-    const body = await res.text().catch(() => '')
-    throw new Error(`API ${res.status} /api/v1/media/upload/${body ? `: ${body}` : ''}`)
+  if (!presignRes.ok) {
+    const body = await presignRes.text().catch(() => '')
+    throw new Error(`presign failed ${presignRes.status}${body ? `: ${body}` : ''}`)
   }
-  return res.json()
+  const { url: s3Url, key } = await presignRes.json()
+
+  const putRes = await fetch(s3Url, {
+    method: 'PUT',
+    headers: { 'Content-Type': file.type },
+    body: file,
+  })
+  if (!putRes.ok) throw new Error(`S3 PUT failed ${putRes.status}`)
+
+  return { key, url: `${CDN_BASE}/${key}` }
 }
 
 // --- Comment delete ---

@@ -944,6 +944,7 @@ a { color: inherit; }
   margin: 10px 0 18px;
 }
 .auth-divider::before, .auth-divider::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.auth-error { color: var(--red); font-size: 13px; margin: 8px 0; }
 
 /* ─── Utilities ─── */
 .hidden { display: none !important; }

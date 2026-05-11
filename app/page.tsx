@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import FeedScreen from '@/app/components/organisms/FeedScreen'
 import TrendingScreen from '@/app/components/organisms/TrendingScreen'
 import SearchScreen from '@/app/components/organisms/SearchScreen'
@@ -14,10 +14,11 @@ import ReportModal from '@/app/components/organisms/ReportModal'
 import MobileTabbar from '@/app/components/organisms/MobileTabbar'
 import type { ComposePayload } from '@/app/components/organisms/ComposeModal'
 import * as api from '@/app/lib/api'
-import { fmtFullName } from '@/app/lib/utils'
+import { useAuth } from '@/app/lib/AuthContext'
 import type { Post, Screen, VoteStyle } from '@/app/types/dilemma'
 
 export default function Home() {
+  const { isLoggedIn, userId: currentUserId, userInitial: currentUserInitial } = useAuth()
   const [posts, setPosts] = useState<Post[]>([])
   const [voteStyle, setVoteStyle] = useState<VoteStyle>('reveal')
   const [theme, setTheme] = useState<'light' | 'dark'>('light')
@@ -26,8 +27,15 @@ export default function Home() {
   const [composeOpen, setComposeOpen] = useState(false)
   const [openPost, setOpenPost] = useState<{ id: number; title: string } | null>(null)
   const [reportPostId, setReportPostId] = useState<number | null>(null)
-  const [currentUserId, setCurrentUserId] = useState<number | null>(null)
-  const [currentUserInitial, setCurrentUserInitial] = useState('U')
+
+  // Queue an action to replay after the user logs in
+  const pendingAction = useRef<(() => void) | null>(null)
+
+  function requireAuth(action: () => void) {
+    if (isLoggedIn) { action(); return }
+    pendingAction.current = action
+    setAuthOpen(true)
+  }
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
@@ -35,15 +43,20 @@ export default function Home() {
 
   useEffect(() => {
     api.getPosts().then(setPosts).catch(console.error)
-    api.getMe().then(me => {
-      setCurrentUserId(me.id)
-      setCurrentUserInitial(fmtFullName(me.name, me.lastname, me.username).charAt(0).toUpperCase())
-    }).catch(console.error)
   }, [])
+
+  // Replay any action that was queued before the user logged in
+  useEffect(() => {
+    if (isLoggedIn && pendingAction.current) {
+      pendingAction.current()
+      pendingAction.current = null
+    }
+  }, [isLoggedIn])
 
   const onVote = useCallback(async (id: number, side: 'a' | 'b') => {
     const prev = posts.find(p => p.id === id)
     if (!prev || prev.voted) return
+    if (!isLoggedIn) { requireAuth(() => onVote(id, side)); return }
 
     setPosts(ps => ps.map(p =>
       p.id !== id ? p : {
@@ -63,6 +76,7 @@ export default function Home() {
   const onLike = useCallback(async (id: number) => {
     const prev = posts.find(p => p.id === id)
     if (!prev) return
+    if (!isLoggedIn) { requireAuth(() => onLike(id)); return }
 
     setPosts(ps => ps.map(p =>
       p.id !== id ? p : { ...p, liked: !p.liked, likes: p.liked ? p.likes - 1 : p.likes + 1 }
@@ -78,6 +92,7 @@ export default function Home() {
   const onSave = useCallback(async (id: number) => {
     const prev = posts.find(p => p.id === id)
     if (!prev) return
+    if (!isLoggedIn) { requireAuth(() => onSave(id)); return }
 
     setPosts(ps => ps.map(p =>
       p.id !== id ? p : { ...p, saved: !p.saved }
@@ -93,6 +108,7 @@ export default function Home() {
   const onRepost = useCallback(async (id: number) => {
     const prev = posts.find(p => p.id === id)
     if (!prev) return
+    if (!isLoggedIn) { requireAuth(() => onRepost(id)); return }
 
     setPosts(ps => ps.map(p =>
       p.id !== id ? p : {
@@ -129,7 +145,7 @@ export default function Home() {
     }
   }, [posts])
 
-  const onPublish = useCallback(async ({ title, aLabel, bLabel, days, tags, aMedia, bMedia }: ComposePayload) => {
+  const onPublish = useCallback(async ({ title, aLabel, bLabel, days, tags, aFile, bFile }: ComposePayload) => {
     setComposeOpen(false)
 
     const endsAt = days > 0
@@ -137,19 +153,23 @@ export default function Home() {
       : null
 
     try {
+      const [aUploaded, bUploaded] = await Promise.all([
+        aFile ? api.uploadMedia(aFile) : Promise.resolve(null),
+        bFile ? api.uploadMedia(bFile) : Promise.resolve(null),
+      ])
+
+      const hasMedia = !!(aUploaded || bUploaded)
       const newPost = await api.createPost({
         title,
         first_textual_content: aLabel,
         second_textual_content: bLabel,
-        post_type: 'text',
+        post_type: hasMedia ? 'image' : 'text',
         tags: tags.trim(),
         ends_at: endsAt,
+        first_content_url: aUploaded?.url ?? null,
+        second_content_url: bUploaded?.url ?? null,
       })
-      setPosts(ps => [{
-        ...newPost,
-        a: { ...newPost.a, mediaType: aMedia?.type ?? null, mediaUrl: aMedia?.url ?? null },
-        b: { ...newPost.b, mediaType: bMedia?.type ?? null, mediaUrl: bMedia?.url ?? null },
-      }, ...ps])
+      setPosts(ps => [newPost, ...ps])
     } catch (err) {
       console.error('createPost failed:', err)
     }
@@ -158,7 +178,7 @@ export default function Home() {
   return (
     <>
       <div className="app">
-        <LeftRail screen={screen} setScreen={setScreen} onCompose={() => setComposeOpen(true)} openAuth={() => setAuthOpen(true)} />
+        <LeftRail screen={screen} setScreen={setScreen} onCompose={() => requireAuth(() => setComposeOpen(true))} openAuth={() => setAuthOpen(true)} />
         <main className="main">
           {screen === 'trending' ? (
             <TrendingScreen posts={posts} setScreen={setScreen} onOpenPost={p => setOpenPost(p)} />

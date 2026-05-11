@@ -11,6 +11,8 @@ export interface ComposePayload {
   tags: string
   aMedia: { type: 'image' | 'video' | 'youtube'; url: string } | null
   bMedia: { type: 'image' | 'video' | 'youtube'; url: string } | null
+  aFile: File | null
+  bFile: File | null
 }
 
 interface ComposeModalProps {
@@ -21,6 +23,7 @@ interface ComposeModalProps {
 interface UploadMedia {
   type: 'image' | 'video'
   url: string
+  file: File
 }
 
 interface SideState {
@@ -70,7 +73,7 @@ async function handleFiles(
 
   set(prev => {
     if (prev.upload?.type === 'video') URL.revokeObjectURL(prev.upload.url)
-    return { ...prev, upload: { type: isVideo ? 'video' : 'image', url } }
+    return { ...prev, upload: { type: isVideo ? 'video' : 'image', url, file } }
   })
 }
 
@@ -243,6 +246,8 @@ export default function ComposeModal({ onClose, onPublish }: ComposeModalProps) 
                 title, aLabel, bLabel, days, tags,
                 aMedia: resolveSideMedia(a),
                 bMedia: resolveSideMedia(b),
+                aFile: a.mode === 'upload' ? (a.upload?.file ?? null) : null,
+                bFile: b.mode === 'upload' ? (b.upload?.file ?? null) : null,
               })}
             >
               Publicar dilema
