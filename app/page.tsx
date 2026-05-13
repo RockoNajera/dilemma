@@ -31,6 +31,19 @@ export default function Home() {
 
   // Queue an action to replay after the user logs in
   const pendingAction = useRef<(() => void) | null>(null)
+  // Latest-ref wrappers — prevent stale closures when replaying a queued action after login
+  const onVoteRef = useRef<(id: number, side: 'a' | 'b') => void>(() => {})
+  const onLikeRef = useRef<(id: number) => void>(() => {})
+  const onSaveRef = useRef<(id: number) => void>(() => {})
+  const onRepostRef = useRef<(id: number) => void>(() => {})
+
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [toast, setToast] = useState<string | null>(null)
+  const showToast = useCallback((msg: string) => {
+    setToast(msg)
+    if (toastTimer.current) clearTimeout(toastTimer.current)
+    toastTimer.current = setTimeout(() => setToast(null), 3500)
+  }, [])
 
   function requireAuth(action: () => void) {
     if (isLoggedIn) { action(); return }
@@ -57,7 +70,7 @@ export default function Home() {
   const onVote = useCallback(async (id: number, side: 'a' | 'b') => {
     const prev = posts.find(p => p.id === id)
     if (!prev || prev.voted) return
-    if (!isLoggedIn) { requireAuth(() => onVote(id, side)); return }
+    if (!isLoggedIn) { requireAuth(() => onVoteRef.current(id, side)); return }
 
     setPosts(ps => ps.map(p =>
       p.id !== id ? p : {
@@ -77,7 +90,7 @@ export default function Home() {
   const onLike = useCallback(async (id: number) => {
     const prev = posts.find(p => p.id === id)
     if (!prev) return
-    if (!isLoggedIn) { requireAuth(() => onLike(id)); return }
+    if (!isLoggedIn) { requireAuth(() => onLikeRef.current(id)); return }
 
     setPosts(ps => ps.map(p =>
       p.id !== id ? p : { ...p, liked: !p.liked, likes: p.liked ? p.likes - 1 : p.likes + 1 }
@@ -93,7 +106,7 @@ export default function Home() {
   const onSave = useCallback(async (id: number) => {
     const prev = posts.find(p => p.id === id)
     if (!prev) return
-    if (!isLoggedIn) { requireAuth(() => onSave(id)); return }
+    if (!isLoggedIn) { requireAuth(() => onSaveRef.current(id)); return }
 
     setPosts(ps => ps.map(p =>
       p.id !== id ? p : { ...p, saved: !p.saved }
@@ -109,7 +122,7 @@ export default function Home() {
   const onRepost = useCallback(async (id: number) => {
     const prev = posts.find(p => p.id === id)
     if (!prev) return
-    if (!isLoggedIn) { requireAuth(() => onRepost(id)); return }
+    if (!isLoggedIn) { requireAuth(() => onRepostRef.current(id)); return }
 
     setPosts(ps => ps.map(p =>
       p.id !== id ? p : {
@@ -124,8 +137,9 @@ export default function Home() {
     } catch (err) {
       console.error('[repost] failed:', err)
       setPosts(ps => ps.map(p => p.id === id ? prev : p))
+      showToast('No se pudo compartir')
     }
-  }, [posts])
+  }, [posts, showToast])
 
   const onFollow = useCallback((id: number, following: boolean) => {
     const post = posts.find(p => p.id === id)
@@ -135,6 +149,11 @@ export default function Home() {
     ))
   }, [posts])
 
+  onVoteRef.current = onVote
+  onLikeRef.current = onLike
+  onSaveRef.current = onSave
+  onRepostRef.current = onRepost
+
   const onDelete = useCallback(async (id: number) => {
     const snapshot = posts
     setPosts(ps => ps.filter(p => p.id !== id))
@@ -143,8 +162,9 @@ export default function Home() {
     } catch (err) {
       console.error('[deletePost] failed:', err)
       setPosts(snapshot)
+      showToast('No se pudo eliminar')
     }
-  }, [posts])
+  }, [posts, showToast])
 
   const onPublish = useCallback(async ({ title, aLabel, bLabel, days, tags, aFile, bFile }: ComposePayload) => {
     const endsAt = days > 0
@@ -173,10 +193,11 @@ export default function Home() {
       setComposeOpen(false)
     } catch (err) {
       console.error('createPost failed:', err)
+      showToast('No se pudo publicar el dilema')
     } finally {
       setPublishing(false)
     }
-  }, [])
+  }, [showToast])
 
   return (
     <>
@@ -237,6 +258,7 @@ export default function Home() {
       {reportPostId !== null && (
         <ReportModal postId={reportPostId} onClose={() => setReportPostId(null)} />
       )}
+      {toast && <div className="toast">{toast}</div>}
     </>
   )
 }

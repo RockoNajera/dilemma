@@ -31,14 +31,18 @@ export default function ProfileScreen({ posts, theme, setTheme, voteStyle, setVo
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [user, setUser] = useState<UserProfile | null>(null)
   const [followCounts, setFollowCounts] = useState({ followers: 0, following: 0 })
+  const [userPosts, setUserPosts] = useState<Post[]>([])
 
   useEffect(() => {
     api.getMe()
       .then(u => {
         setUser(u)
-        return api.getFollowCounts(u.id)
+        return Promise.all([api.getFollowCounts(u.id), api.getUserPosts(u.id)])
       })
-      .then(setFollowCounts)
+      .then(([counts, uPosts]) => {
+        setFollowCounts(counts)
+        setUserPosts(uPosts)
+      })
       .catch(console.error)
   }, [])
 
@@ -49,14 +53,11 @@ export default function ProfileScreen({ posts, theme, setTheme, voteStyle, setVo
   const initial = displayName.charAt(0).toUpperCase()
   const bio = user?.bio || null
 
-  const myPosts = user
-    ? posts.filter(p => p.author.handle === `@${user.username}`)
-    : []
-
+  // TODO: savedPosts filters the current feed page only — needs a /api/v1/users/me/bookmarks/ endpoint (see Dilemma — Security Followups.md)
   const savedPosts = posts.filter(p => p.saved)
 
   const tabPosts: Post[] = tab === 'dilemas'
-    ? myPosts
+    ? userPosts
     : tab === 'guardados'
       ? savedPosts
       : []
@@ -115,7 +116,7 @@ export default function ProfileScreen({ posts, theme, setTheme, voteStyle, setVo
         )}
         <div className="profile-stats">
           <div className="profile-stat">
-            <div className="n">{myPosts.length}</div>
+            <div className="n">{userPosts.length}</div>
             <div className="l">Dilemas</div>
           </div>
           <div className="profile-stat">

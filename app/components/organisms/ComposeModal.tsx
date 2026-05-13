@@ -191,6 +191,7 @@ export default function ComposeModal({ onClose, onPublish, publishing = false }:
   const [title, setTitle] = useState('')
   const [aLabel, setALabel] = useState('')
   const [bLabel, setBLabel] = useState('')
+  // TODO: expose duration picker; hardcoded until business rules are defined (see Dilemma — Security Followups.md)
   const days = 365
   const [tags, setTags] = useState('')
   const [a, setA] = useState<SideState>(INIT)

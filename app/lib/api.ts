@@ -2,7 +2,6 @@ import type { Comment, CommentReply, Post, ReportCategory, UpdateProfilePayload,
 import { fmtFullName } from '@/app/lib/utils'
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
-const CDN_BASE = 'https://d23owewpb9u2gj.cloudfront.net'
 
 // --- Token store ---
 let _token: string | null = null
@@ -16,10 +15,7 @@ export function setToken(token: string | null): void {
 export function getToken(): string | null {
   if (_token) return _token
   if (typeof window !== 'undefined') {
-    _token =
-      localStorage.getItem('dilemma_id_token') ??
-      process.env.NEXT_PUBLIC_DEV_TOKEN ??
-      null
+    _token = localStorage.getItem('dilemma_id_token') ?? null
   }
   return _token
 }
@@ -449,6 +445,11 @@ export async function getFollowers(userId: number): Promise<UserSummary[]> {
 export async function getFollowing(userId: number): Promise<UserSummary[]> {
   const data = await request<PaginatedResponse<UserSummary>>(`/api/v1/follow/${userId}/following/`)
   return data.results
+}
+
+export async function getUserPosts(userId: number): Promise<Post[]> {
+  const data = await request<PaginatedResponse<ApiPost>>(`/api/v1/users/${userId}/posts/`)
+  return data.results.map(adaptPost)
 }
 
 // --- Feed ---
