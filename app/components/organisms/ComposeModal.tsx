@@ -18,6 +18,7 @@ export interface ComposePayload {
 interface ComposeModalProps {
   onClose: () => void
   onPublish: (payload: ComposePayload) => void
+  publishing?: boolean
 }
 
 interface UploadMedia {
@@ -186,7 +187,7 @@ function SideZone({
   )
 }
 
-export default function ComposeModal({ onClose, onPublish }: ComposeModalProps) {
+export default function ComposeModal({ onClose, onPublish, publishing = false }: ComposeModalProps) {
   const [title, setTitle] = useState('')
   const [aLabel, setALabel] = useState('')
   const [bLabel, setBLabel] = useState('')
@@ -209,7 +210,7 @@ export default function ComposeModal({ onClose, onPublish }: ComposeModalProps) 
     }
   }, [])
 
-  const canPublish = title && aLabel && bLabel
+  const canPublish = !publishing && title && aLabel && bLabel
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
@@ -250,7 +251,7 @@ export default function ComposeModal({ onClose, onPublish }: ComposeModalProps) 
                 bFile: b.mode === 'upload' ? (b.upload?.file ?? null) : null,
               })}
             >
-              Publicar dilema
+              {publishing ? 'Subiendo…' : 'Publicar dilema'}
             </button>
           </div>
         </div>

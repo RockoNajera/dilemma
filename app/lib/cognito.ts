@@ -39,7 +39,7 @@ async function cognitoRequest<T>(target: string, body: Record<string, unknown>):
   return json as T
 }
 
-export async function register(email: string, password: string, name: string): Promise<void> {
+export async function register(email: string, password: string, name: string, username: string): Promise<void> {
   await cognitoRequest('SignUp', {
     ClientId: CLIENT_ID,
     Username: email,
@@ -47,15 +47,8 @@ export async function register(email: string, password: string, name: string): P
     UserAttributes: [
       { Name: 'email', Value: email },
       { Name: 'name', Value: name },
+      { Name: 'username', Value: username },
     ],
-  })
-}
-
-export async function confirmOtp(email: string, code: string): Promise<void> {
-  await cognitoRequest('ConfirmSignUp', {
-    ClientId: CLIENT_ID,
-    Username: email,
-    ConfirmationCode: code,
   })
 }
 

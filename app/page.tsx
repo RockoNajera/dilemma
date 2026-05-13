@@ -25,6 +25,7 @@ export default function Home() {
   const [screen, setScreen] = useState<Screen>('feed')
   const [authOpen, setAuthOpen] = useState(false)
   const [composeOpen, setComposeOpen] = useState(false)
+  const [publishing, setPublishing] = useState(false)
   const [openPost, setOpenPost] = useState<{ id: number; title: string } | null>(null)
   const [reportPostId, setReportPostId] = useState<number | null>(null)
 
@@ -146,12 +147,11 @@ export default function Home() {
   }, [posts])
 
   const onPublish = useCallback(async ({ title, aLabel, bLabel, days, tags, aFile, bFile }: ComposePayload) => {
-    setComposeOpen(false)
-
     const endsAt = days > 0
       ? new Date(Date.now() + days * 86_400_000).toISOString()
       : null
 
+    setPublishing(true)
     try {
       const [aUploaded, bUploaded] = await Promise.all([
         aFile ? api.uploadMedia(aFile) : Promise.resolve(null),
@@ -166,12 +166,15 @@ export default function Home() {
         post_type: hasMedia ? 'image' : 'text',
         tags: tags.trim(),
         ends_at: endsAt,
-        first_content_url: aUploaded?.url ?? null,
-        second_content_url: bUploaded?.url ?? null,
+        first_content: aUploaded?.key ?? null,
+        second_content: bUploaded?.key ?? null,
       })
       setPosts(ps => [newPost, ...ps])
+      setComposeOpen(false)
     } catch (err) {
       console.error('createPost failed:', err)
+    } finally {
+      setPublishing(false)
     }
   }, [])
 
@@ -222,7 +225,7 @@ export default function Home() {
       <MobileTabbar screen={screen} setScreen={setScreen} onCompose={() => setComposeOpen(true)} />
 
       {authOpen && <AuthModal onClose={() => setAuthOpen(false)} />}
-      {composeOpen && <ComposeModal onClose={() => setComposeOpen(false)} onPublish={onPublish} />}
+      {composeOpen && <ComposeModal onClose={() => setComposeOpen(false)} onPublish={onPublish} publishing={publishing} />}
       {openPost !== null && (
         <CommentDrawer
           postId={openPost.id}

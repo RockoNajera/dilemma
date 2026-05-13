@@ -11,17 +11,13 @@ let _onUnauthorized: (() => Promise<string | null>) | null = null
 
 export function setToken(token: string | null): void {
   _token = token
-  if (typeof window === 'undefined') return
-  token
-    ? localStorage.setItem('dilemma_token', token)
-    : localStorage.removeItem('dilemma_token')
 }
 
 export function getToken(): string | null {
   if (_token) return _token
   if (typeof window !== 'undefined') {
     _token =
-      localStorage.getItem('dilemma_token') ??
+      localStorage.getItem('dilemma_id_token') ??
       process.env.NEXT_PUBLIC_DEV_TOKEN ??
       null
   }
@@ -59,6 +55,13 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   }
   if (res.status === 204) return undefined as T
   return res.json() as Promise<T>
+}
+
+export async function checkUsernameAvailability(username: string): Promise<boolean> {
+  const res = await fetch(`${BASE_URL}/api/v1/auth/username/?username=${encodeURIComponent(username)}`)
+  if (res.ok) return true
+  if (res.status === 409 || res.status === 400) return false
+  throw new Error(`Username check failed: ${res.status}`)
 }
 
 // --- Backend response types ---
@@ -219,8 +222,8 @@ export interface CreatePostPayload {
   post_type: string
   tags: string
   ends_at: string | null
-  first_content_url?: string | null
-  second_content_url?: string | null
+  first_content?: string | null
+  second_content?: string | null
 }
 
 export async function createPost(payload: CreatePostPayload): Promise<Post> {
@@ -483,30 +486,27 @@ export async function unblockUser(userId: number): Promise<void> {
 
 // --- Media ---
 
-export async function uploadMedia(file: File): Promise<{ key: string; url: string }> {
-  const token = getToken()
-  const presignHeaders: Record<string, string> = { 'Content-Type': 'application/json' }
-  if (token) presignHeaders['Authorization'] = `Bearer ${token}`
+export async function uploadMedia(file: File): Promise<{ key: string }> {
+  const { upload_url, key } = await request<{ upload_url: string; key: string; expires_in: number }>(
+    '/api/v1/media/upload/',
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        filename: file.name,
+        content_type: file.type,
+        file_size: file.size,
+      }),
+    },
+  )
 
-  const presignRes = await fetch(`${BASE_URL}/uploads/presign`, {
-    method: 'POST',
-    headers: presignHeaders,
-    body: JSON.stringify({ content_type: file.type }),
-  })
-  if (!presignRes.ok) {
-    const body = await presignRes.text().catch(() => '')
-    throw new Error(`presign failed ${presignRes.status}${body ? `: ${body}` : ''}`)
-  }
-  const { url: s3Url, key } = await presignRes.json()
-
-  const putRes = await fetch(s3Url, {
+  const putRes = await fetch(upload_url, {
     method: 'PUT',
     headers: { 'Content-Type': file.type },
     body: file,
   })
-  if (!putRes.ok) throw new Error(`S3 PUT failed ${putRes.status}`)
+  if (!putRes.ok) throw new Error(`S3 upload failed: ${putRes.status}`)
 
-  return { key, url: `${CDN_BASE}/${key}` }
+  return { key }
 }
 
 // --- Comment delete ---

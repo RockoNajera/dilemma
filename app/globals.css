@@ -868,6 +868,14 @@ a { color: inherit; }
   border-color: var(--ink);
   box-shadow: 0 0 0 3px color-mix(in oklab, var(--ink) 10%, transparent);
 }
+.field input.input--available {
+  border-color: var(--green-ink);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--green-ink) 15%, transparent);
+}
+.field input.input--taken {
+  border-color: var(--red);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--red) 15%, transparent);
+}
 
 /* ─── Empty state ─── */
 .empty-state {

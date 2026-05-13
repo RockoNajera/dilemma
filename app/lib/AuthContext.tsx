@@ -10,13 +10,11 @@ interface AuthState {
   isLoggedIn: boolean
   userId: number | null
   userInitial: string
-  pendingEmail: string | null
 }
 
 interface AuthContextValue extends AuthState {
   login(email: string, password: string): Promise<void>
-  register(email: string, password: string, name: string): Promise<void>
-  confirmOtp(code: string): Promise<void>
+  register(email: string, password: string, name: string, username: string): Promise<void>
   logout(): void
 }
 
@@ -33,11 +31,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isLoggedIn: false,
     userId: null,
     userInitial: 'U',
-    pendingEmail: null,
   })
 
-  const applyTokens = useCallback(async (accessToken: string) => {
-    api.setToken(accessToken)
+  const applyTokens = useCallback(async (idToken: string) => {
+    api.setToken(idToken)
     const me = await api.getMe()
     setState(s => ({
       ...s,
@@ -57,23 +54,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const refreshed = await cognito.refreshSession(stored.refreshToken)
         cognito.saveTokens({ ...stored, ...refreshed })
-        api.setToken(refreshed.accessToken)
-        return refreshed.accessToken
+        api.setToken(refreshed.idToken)
+        return refreshed.idToken
       } catch {
         cognito.clearTokens()
         api.setToken(null)
-        setState({ isLoggedIn: false, userId: null, userInitial: 'U', pendingEmail: null })
+        setState({ isLoggedIn: false, userId: null, userInitial: 'U' })
         return null
       }
     })
 
     if (!tokens) return
 
-    applyTokens(tokens.accessToken).catch(async () => {
+    applyTokens(tokens.idToken).catch(async () => {
       try {
         const refreshed = await cognito.refreshSession(tokens.refreshToken)
         cognito.saveTokens({ ...tokens, ...refreshed })
-        await applyTokens(refreshed.accessToken)
+        await applyTokens(refreshed.idToken)
       } catch {
         cognito.clearTokens()
         api.setToken(null)
@@ -86,28 +83,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback(async (email: string, password: string) => {
     const tokens = await cognito.login(email, password)
     cognito.saveTokens(tokens)
-    await applyTokens(tokens.accessToken)
+    await applyTokens(tokens.idToken)
   }, [applyTokens])
 
-  const register = useCallback(async (email: string, password: string, name: string) => {
-    await cognito.register(email, password, name)
-    setState(s => ({ ...s, pendingEmail: email }))
+  const register = useCallback(async (email: string, password: string, name: string, username: string) => {
+    await cognito.register(email, password, name, username)
   }, [])
-
-  const confirmOtp = useCallback(async (code: string) => {
-    if (!state.pendingEmail) throw new Error('No pending registration')
-    await cognito.confirmOtp(state.pendingEmail, code)
-    setState(s => ({ ...s, pendingEmail: null }))
-  }, [state.pendingEmail])
 
   const logout = useCallback(() => {
     cognito.clearTokens()
     api.setToken(null)
-    setState({ isLoggedIn: false, userId: null, userInitial: 'U', pendingEmail: null })
+    setState({ isLoggedIn: false, userId: null, userInitial: 'U' })
   }, [])
 
   return (
-    <AuthContext.Provider value={{ ...state, login, register, confirmOtp, logout }}>
+    <AuthContext.Provider value={{ ...state, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   )
