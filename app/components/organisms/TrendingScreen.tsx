@@ -2,15 +2,14 @@
 
 import { useState } from 'react'
 import { fmtCount } from '@/app/lib/utils'
-import type { Post } from '@/app/types/dilemma'
+import type { Post, Screen } from '@/app/types/dilemma'
 
-type Screen = 'feed' | 'trending' | 'notifs' | 'saved' | 'profile'
 type Period = 'hoy' | 'semana' | 'mes'
 
 interface TrendingScreenProps {
   posts: Post[]
   setScreen: (s: Screen) => void
-  onOpenPost: (id: number) => void
+  onOpenPost: (post: { id: number; title: string }) => void
 }
 
 export default function TrendingScreen({ posts, setScreen, onOpenPost }: TrendingScreenProps) {
@@ -39,7 +38,7 @@ export default function TrendingScreen({ posts, setScreen, onOpenPost }: Trendin
             <div
               key={i}
               className="trend-card"
-              onClick={() => { setScreen('feed'); setTimeout(() => onOpenPost(p.id), 50) }}
+              onClick={() => { setScreen('feed'); onOpenPost(p) }}
             >
               <div className="mini-options">
                 <div className="mini mini-a" />

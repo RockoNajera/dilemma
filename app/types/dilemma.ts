@@ -1,4 +1,16 @@
 export type VoteStyle = 'reveal' | 'tap' | 'slider'
+export type Screen = 'feed' | 'trending' | 'notifs' | 'saved' | 'profile' | 'search'
+
+export interface UserProfile {
+  id: number
+  username: string
+  name: string
+  lastname: string
+  bio: string
+  profile_pic_url: string | null
+  celebrity: boolean
+  privacy_status: string
+}
 
 export interface Author {
   name: string
@@ -9,6 +21,8 @@ export interface Author {
 export interface PostOption {
   label: string
   caption: string
+  mediaType?: 'image' | 'video' | 'youtube' | null
+  mediaUrl?: string | null
 }
 
 export interface Votes {
@@ -18,9 +32,12 @@ export interface Votes {
 
 export interface Post {
   id: number
+  authorId: number
   author: Author
+  authorFollowed: boolean
   posted: string
   daysLeft: number
+  timeless: boolean
   title: string
   tags: string[]
   a: PostOption
@@ -32,13 +49,14 @@ export interface Post {
   voted: 'a' | 'b' | null
   liked: boolean
   saved: boolean
+  reposted: boolean
 }
 
-export interface TrendingItem {
-  rank: number
-  title: string
-  votes: string
-  heat: string
+export interface UpdateProfilePayload {
+  name?: string
+  lastname?: string
+  bio?: string
+  privacy_status?: string
 }
 
 export interface Creator {
@@ -48,11 +66,55 @@ export interface Creator {
   followers: string
 }
 
-export interface Comment {
+export interface CommentAuthor {
+  id: number
+  username: string
   name: string
   initial: string
-  side: 'a' | 'b'
-  ts: string
+}
+
+export interface CommentReply {
+  id: number
+  author: CommentAuthor
   text: string
-  likes: number
+  voteSide: 'A' | 'B' | null
+  likeCount: number
+  userLiked: boolean
+  ts: string
+}
+
+export interface Comment {
+  id: number
+  author: CommentAuthor
+  parentId: number | null
+  text: string
+  voteSide: 'A' | 'B' | null
+  likeCount: number
+  userLiked: boolean
+  replies: CommentReply[]
+  ts: string
+}
+
+export interface UserSummary {
+  id: number
+  username: string
+  name: string
+  lastname: string
+  profile_pic_url: string | null
+  celebrity: boolean
+  privacy_status: string
+  is_following?: boolean
+}
+
+export interface ReportSubcategory {
+  id: number
+  title: string
+}
+
+export interface ReportCategory {
+  id: number
+  title: string
+  onPosts: boolean
+  hasSubcategories: boolean
+  subcategories: ReportSubcategory[]
 }

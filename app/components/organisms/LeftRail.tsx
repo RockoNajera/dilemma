@@ -1,8 +1,9 @@
 'use client'
 
 import Icon from '@/app/components/atoms/Icon'
+import { useAuth } from '@/app/lib/AuthContext'
 
-type Screen = 'feed' | 'trending' | 'notifs' | 'saved' | 'profile'
+type Screen = 'feed' | 'trending' | 'notifs' | 'saved' | 'profile' | 'search'
 
 interface LeftRailProps {
   screen: Screen
@@ -30,6 +31,8 @@ function NavItem({
 }
 
 export default function LeftRail({ screen, setScreen, onCompose, openAuth }: LeftRailProps) {
+  const { isLoggedIn, userInitial, logout } = useAuth()
+
   return (
     <aside className="rail-left">
       <div className="brand">
@@ -39,6 +42,7 @@ export default function LeftRail({ screen, setScreen, onCompose, openAuth }: Lef
 
       <NavItem icon="home"     label="Inicio"         active={screen === 'feed'}     onClick={() => setScreen('feed')} />
       <NavItem icon="trending" label="Tendencias"     active={screen === 'trending'} onClick={() => setScreen('trending')} />
+      <NavItem icon="search"   label="Buscar"         active={screen === 'search'}   onClick={() => setScreen('search')} />
       <NavItem icon="bell"     label="Notificaciones" active={screen === 'notifs'}   onClick={() => setScreen('notifs')} badge="3" />
       <NavItem icon="bookmark" label="Guardados"      active={screen === 'saved'}    onClick={() => setScreen('saved')} />
       <NavItem icon="profile"  label="Perfil"         active={screen === 'profile'}  onClick={() => setScreen('profile')} />
@@ -48,9 +52,23 @@ export default function LeftRail({ screen, setScreen, onCompose, openAuth }: Lef
           <Icon name="plus" size={16} />
           <span className="label">Crear dilemma</span>
         </button>
-        <button className="btn btn-ghost" onClick={openAuth}>
-          <span className="label">Iniciar sesión</span>
-        </button>
+        {isLoggedIn ? (
+          <button className="btn btn-ghost" onClick={logout} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{
+              width: 28, height: 28, borderRadius: '50%',
+              background: 'var(--purple)', color: '#fff',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontWeight: 700, fontSize: 13,
+            }}>
+              {userInitial}
+            </div>
+            <span className="label">Cerrar sesión</span>
+          </button>
+        ) : (
+          <button className="btn btn-ghost" onClick={openAuth}>
+            <span className="label">Iniciar sesión</span>
+          </button>
+        )}
       </div>
     </aside>
   )
