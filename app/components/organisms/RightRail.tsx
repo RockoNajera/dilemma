@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Icon from '@/app/components/atoms/Icon'
 import FollowButton from '@/app/components/molecules/FollowButton'
 import * as api from '@/app/lib/api'
+import { useAuth } from '@/app/lib/AuthContext'
 import { fmtCount, fmtFullName } from '@/app/lib/utils'
 import type { Post, Screen, UserSummary } from '@/app/types/dilemma'
 
@@ -12,6 +13,7 @@ interface RightRailProps {
 }
 
 export default function RightRail({ setScreen }: RightRailProps) {
+  const { isLoggedIn } = useAuth()
   const [trending, setTrending] = useState<Post[]>([])
   const [creators, setCreators] = useState<UserSummary[]>([])
 
@@ -21,8 +23,12 @@ export default function RightRail({ setScreen }: RightRailProps) {
         [...posts].sort((a, b) => (b.votes.a + b.votes.b) - (a.votes.a + a.votes.b)).slice(0, 5)
       ))
       .catch(console.error)
-    api.getSuggestedCreators().then(data => setCreators(data.slice(0, 5))).catch(console.error)
   }, [])
+
+  useEffect(() => {
+    if (!isLoggedIn) return
+    api.getSuggestedCreators().then(data => setCreators(data.slice(0, 5))).catch(console.error)
+  }, [isLoggedIn])
 
   return (
     <aside className="rail-right">

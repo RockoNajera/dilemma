@@ -1,7 +1,7 @@
 import type { Comment, CommentReply, Post, ReportCategory, UpdateProfilePayload, UserProfile, UserSummary } from '@/app/types/dilemma'
 import { fmtFullName } from '@/app/lib/utils'
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
+const BASE_URL = ''
 
 // --- Token store ---
 let _token: string | null = null
