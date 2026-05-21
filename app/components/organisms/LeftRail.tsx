@@ -3,7 +3,7 @@
 import Icon from '@/app/components/atoms/Icon'
 import { useAuth } from '@/app/lib/AuthContext'
 
-type Screen = 'feed' | 'trending' | 'saved' | 'profile' | 'search'
+type Screen = 'feed' | 'trending' | 'profile' | 'search'
 
 interface LeftRailProps {
   screen: Screen
@@ -43,7 +43,6 @@ export default function LeftRail({ screen, setScreen, onCompose, openAuth }: Lef
       <NavItem icon="home"     label="Inicio"         active={screen === 'feed'}     onClick={() => setScreen('feed')} />
       <NavItem icon="trending" label="Tendencias"     active={screen === 'trending'} onClick={() => setScreen('trending')} />
       <NavItem icon="search"   label="Buscar"         active={screen === 'search'}   onClick={() => setScreen('search')} />
-      <NavItem icon="bookmark" label="Guardados"      active={screen === 'saved'}    onClick={() => setScreen('saved')} />
       <NavItem icon="profile"  label="Perfil"         active={screen === 'profile'}  onClick={() => setScreen('profile')} />
 
       <div className="rail-cta">

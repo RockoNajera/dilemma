@@ -37,6 +37,13 @@ export default function ProfileScreen({ posts, theme, setTheme, voteStyle, setVo
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (!currentUserId) {
+      setUser(null)
+      setFollowCounts({ followers: 0, following: 0 })
+      setUserPosts([])
+      setLoading(false)
+      return
+    }
     setLoading(true)
     api.getMe()
       .then(u => {
@@ -49,7 +56,7 @@ export default function ProfileScreen({ posts, theme, setTheme, voteStyle, setVo
       })
       .catch(console.error)
       .finally(() => setLoading(false))
-  }, [])
+  }, [currentUserId])
 
   const displayName = user
     ? fmtFullName(user.name, user.lastname, user.username)

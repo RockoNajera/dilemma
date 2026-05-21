@@ -226,7 +226,7 @@ export default function Home() {
               onDelete={onDelete}
               onOpenPost={p => setOpenPost(p)}
               onReport={setReportPostId}
-              onLogout={logout}
+              onLogout={() => { logout(); setScreen('feed') }}
             />
           ) : (
             <FeedScreen
