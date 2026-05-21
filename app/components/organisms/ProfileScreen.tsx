@@ -22,11 +22,12 @@ interface ProfileScreenProps {
   onDelete: (id: number) => void
   onOpenPost: (post: { id: number; title: string }) => void
   onReport: (id: number) => void
+  onLogout: () => void
 }
 
 type Tab = 'dilemas' | 'votos' | 'comentarios' | 'guardados'
 
-export default function ProfileScreen({ posts, theme, setTheme, voteStyle, setVoteStyle, currentUserId, onVote, onLike, onRepost, onSave, onFollow, onDelete, onOpenPost, onReport }: ProfileScreenProps) {
+export default function ProfileScreen({ posts, theme, setTheme, voteStyle, setVoteStyle, currentUserId, onVote, onLike, onRepost, onSave, onFollow, onDelete, onOpenPost, onReport, onLogout }: ProfileScreenProps) {
   const [tab, setTab] = useState<Tab>('dilemas')
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [user, setUser] = useState<UserProfile | null>(null)
@@ -37,7 +38,7 @@ export default function ProfileScreen({ posts, theme, setTheme, voteStyle, setVo
     api.getMe()
       .then(u => {
         setUser(u)
-        return Promise.all([api.getFollowCounts(u.id), api.getUserPosts(u.id)])
+        return Promise.all([api.getFollowCounts(u.id), api.getUserPosts(u.username)])
       })
       .then(([counts, uPosts]) => {
         setFollowCounts(counts)
@@ -92,6 +93,16 @@ export default function ProfileScreen({ posts, theme, setTheme, voteStyle, setVo
                     <button aria-pressed={voteStyle === 'tap'}    onClick={() => setVoteStyle('tap')}>Tocar</button>
                     <button aria-pressed={voteStyle === 'slider'} onClick={() => setVoteStyle('slider')}>Deslizar</button>
                   </div>
+                </div>
+                <div style={{ borderTop: '1px solid var(--line)', paddingTop: 10, marginTop: 2 }}>
+                  <button
+                    className="btn btn-sm btn-ghost"
+                    style={{ width: '100%', color: 'var(--red)', borderColor: 'var(--red)' }}
+                    onClick={onLogout}
+                  >
+                    <Icon name="log-out" size={13} />
+                    <span style={{ marginLeft: 6 }}>Cerrar sesión</span>
+                  </button>
                 </div>
               </div>
             )}

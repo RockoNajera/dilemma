@@ -18,8 +18,9 @@ import { useAuth } from '@/app/lib/AuthContext'
 import type { Post, Screen, VoteStyle } from '@/app/types/dilemma'
 
 export default function Home() {
-  const { isLoggedIn, userId: currentUserId, userInitial: currentUserInitial } = useAuth()
+  const { isLoggedIn, userId: currentUserId, userInitial: currentUserInitial, logout } = useAuth()
   const [posts, setPosts] = useState<Post[]>([])
+  const [loading, setLoading] = useState(true)
   const [voteStyle, setVoteStyle] = useState<VoteStyle>('reveal')
   const [theme, setTheme] = useState<'light' | 'dark'>('light')
   const [screen, setScreen] = useState<Screen>('feed')
@@ -56,7 +57,10 @@ export default function Home() {
   }, [theme])
 
   useEffect(() => {
-    api.getPosts().then(setPosts).catch(console.error)
+    api.getPosts()
+      .then(setPosts)
+      .catch(console.error)
+      .finally(() => setLoading(false))
   }, [])
 
   // Replay any action that was queued before the user logged in
@@ -222,10 +226,12 @@ export default function Home() {
               onDelete={onDelete}
               onOpenPost={p => setOpenPost(p)}
               onReport={setReportPostId}
+              onLogout={logout}
             />
           ) : (
             <FeedScreen
               posts={posts}
+              loading={loading}
               voteStyle={voteStyle}
               setVoteStyle={setVoteStyle}
               onVote={onVote}

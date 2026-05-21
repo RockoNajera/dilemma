@@ -2,6 +2,7 @@ export type IconName =
   | 'home' | 'trending' | 'profile' | 'bell' | 'bookmark' | 'bookmark-fill'
   | 'heart' | 'heart-fill' | 'chat' | 'share' | 'repost' | 'plus' | 'close'
   | 'search' | 'more' | 'settings' | 'sun' | 'moon' | 'image' | 'flame' | 'clock' | 'send'
+  | 'log-out'
 
 interface IconProps {
   name: IconName
@@ -70,6 +71,8 @@ export default function Icon({ name, size = 18, strokeWidth = 1.8, className, st
       return <svg {...common}><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
     case 'send':
       return <svg {...common}><path d="m22 2-11 11"/><path d="M22 2 15 22l-4-9-9-4z"/></svg>
+    case 'log-out':
+      return <svg {...common}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
     default:
       return null
   }
