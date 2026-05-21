@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Icon from '@/app/components/atoms/Icon'
 import PostCard from '@/app/components/organisms/PostCard'
+import PostCardSkeleton from '@/app/components/organisms/PostCardSkeleton'
 import * as api from '@/app/lib/api'
 import { fmtCount, fmtFullName } from '@/app/lib/utils'
 import type { Post, UserProfile, VoteStyle } from '@/app/types/dilemma'
@@ -33,8 +34,10 @@ export default function ProfileScreen({ posts, theme, setTheme, voteStyle, setVo
   const [user, setUser] = useState<UserProfile | null>(null)
   const [followCounts, setFollowCounts] = useState({ followers: 0, following: 0 })
   const [userPosts, setUserPosts] = useState<Post[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    setLoading(true)
     api.getMe()
       .then(u => {
         setUser(u)
@@ -45,6 +48,7 @@ export default function ProfileScreen({ posts, theme, setTheme, voteStyle, setVo
         setUserPosts(uPosts)
       })
       .catch(console.error)
+      .finally(() => setLoading(false))
   }, [])
 
   const displayName = user
@@ -151,7 +155,9 @@ export default function ProfileScreen({ posts, theme, setTheme, voteStyle, setVo
       </div>
 
       <div className="feed">
-        {tabPosts.length > 0 ? (
+        {loading && tab === 'dilemas' ? (
+          Array.from({ length: 3 }).map((_, i) => <PostCardSkeleton key={i} />)
+        ) : tabPosts.length > 0 ? (
           tabPosts.map(p => (
             <PostCard
               key={p.id}

@@ -5,6 +5,7 @@ import Icon from '@/app/components/atoms/Icon'
 import FollowButton from '@/app/components/molecules/FollowButton'
 import * as api from '@/app/lib/api'
 import { fmtCount, fmtFullName } from '@/app/lib/utils'
+import { useAuth } from '@/app/lib/AuthContext'
 import type { Post, Screen, UserSummary } from '@/app/types/dilemma'
 
 interface RightRailProps {
@@ -12,6 +13,7 @@ interface RightRailProps {
 }
 
 export default function RightRail({ setScreen }: RightRailProps) {
+  const { isLoggedIn } = useAuth()
   const [trending, setTrending] = useState<Post[]>([])
   const [creators, setCreators] = useState<UserSummary[]>([])
 
@@ -21,8 +23,10 @@ export default function RightRail({ setScreen }: RightRailProps) {
         [...posts].sort((a, b) => (b.votes.a + b.votes.b) - (a.votes.a + a.votes.b)).slice(0, 5)
       ))
       .catch(console.error)
-    api.getSuggestedCreators().then(data => setCreators(data.slice(0, 5))).catch(console.error)
-  }, [])
+    if (isLoggedIn) {
+      api.getSuggestedCreators().then(data => setCreators(data.slice(0, 5))).catch(console.error)
+    }
+  }, [isLoggedIn])
 
   return (
     <aside className="rail-right">
@@ -41,6 +45,7 @@ export default function RightRail({ setScreen }: RightRailProps) {
         ))}
       </div>
 
+      {isLoggedIn && (
       <div className="panel">
         <h3>Creadores para seguir</h3>
         {creators.map(c => {
@@ -58,6 +63,7 @@ export default function RightRail({ setScreen }: RightRailProps) {
           )
         })}
       </div>
+      )}
 
       <div className="panel" style={{ fontFamily: 'var(--mono)', fontSize: 10.5, color: 'var(--ink-3)', lineHeight: 1.8 }}>
         Términos · Privacidad · Ayuda<br />

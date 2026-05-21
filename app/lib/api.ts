@@ -447,8 +447,8 @@ export async function getFollowing(userId: number): Promise<UserSummary[]> {
   return data.results
 }
 
-export async function getUserPosts(userId: number): Promise<Post[]> {
-  const data = await request<PaginatedResponse<ApiPost>>(`/api/v1/users/${userId}/posts/`)
+export async function getUserPosts(username: string): Promise<Post[]> {
+  const data = await request<PaginatedResponse<ApiPost>>(`/api/v1/posts/?author=${encodeURIComponent(username)}`)
   return data.results.map(adaptPost)
 }
 
