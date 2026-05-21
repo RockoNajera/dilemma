@@ -47,7 +47,7 @@ export async function register(email: string, password: string, name: string, us
     UserAttributes: [
       { Name: 'email', Value: email },
       { Name: 'name', Value: name },
-      { Name: 'username', Value: username },
+      { Name: 'custom:username', Value: username },
     ],
   })
 }
