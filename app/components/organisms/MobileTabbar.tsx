@@ -2,7 +2,7 @@
 
 import Icon from '@/app/components/atoms/Icon'
 
-type Screen = 'feed' | 'trending' | 'notifs' | 'saved' | 'profile' | 'search'
+type Screen = 'feed' | 'trending' | 'saved' | 'profile' | 'search'
 
 interface MobileTabbarProps {
   screen: Screen
@@ -22,8 +22,8 @@ export default function MobileTabbar({ screen, setScreen, onCompose }: MobileTab
       <button onClick={onCompose}>
         <div className="compose"><Icon name="plus" size={22} /></div>
       </button>
-      <button aria-current={screen === 'notifs' ? 'page' : undefined} onClick={() => setScreen('notifs')}>
-        <Icon name="bell" size={22} />Alertas
+      <button aria-current={screen === 'saved' ? 'page' : undefined} onClick={() => setScreen('saved')}>
+        <Icon name="bookmark" size={22} />Guardados
       </button>
       <button aria-current={screen === 'profile' ? 'page' : undefined} onClick={() => setScreen('profile')}>
         <Icon name="profile" size={22} />Perfil

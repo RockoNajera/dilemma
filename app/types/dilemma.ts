@@ -1,5 +1,5 @@
 export type VoteStyle = 'reveal' | 'tap' | 'slider'
-export type Screen = 'feed' | 'trending' | 'notifs' | 'saved' | 'profile' | 'search'
+export type Screen = 'feed' | 'trending' | 'saved' | 'profile' | 'search'
 
 export interface UserProfile {
   id: number
